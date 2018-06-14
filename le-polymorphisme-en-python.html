@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr" prefix="og: http://ogp.me/ns#">
+	<head>
+		<link href="http://gmpg.org/xfn/11" rel="profile">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+		<!-- Metadata -->
+	<meta name="description" content="Ingénieur logiciel #python">
+	<meta property="og:description" content="Ingénieur logiciel #python">
+	<meta property="og:title" content="Le polymorphisme en Python" />
+	<meta property="og:type" content="article" />
+	<meta property="og:url" content="/le-polymorphisme-en-python.html" />
+		<meta property="og:image" content="/images/profile.png" />
+
+		<!-- Enable responsiveness on mobile devices-->
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+		<title>Mon labo</title>
+
+		<!-- CSS -->
+		<link href="//fonts.googleapis.com/" rel="dns-prefetch">
+		<link href="//fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic|Abril+Fatface|PT+Sans:400,400italic,700&amp;subset=latin,latin-ext" rel="stylesheet">
+
+		<link rel="stylesheet" href="/theme/css/poole.css" />
+		<link rel="stylesheet" href="/theme/css/hyde.css" />
+		<link rel="stylesheet" href="/theme/css/syntax.css" />
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+
+		<!-- RSS -->
+		<link rel="alternate" type="application/rss+xml" title="RSS" href="/atom.xml">
+	</head>
+
+	<body class="theme-base-0d">
+<div class="sidebar">
+	<div class="container sidebar-sticky">
+		<div class="sidebar-about">
+
+			<h1>
+				<a href="/">
+					<img class="profile-picture" src="/images/profile.png">
+					Mon labo
+				</a>
+			</h1>
+			<p class="lead"></p>
+			<p class="lead">Ingénieur logiciel #python </p>
+			<p></p>
+		</div>
+		<nav class="sidebar-nav">
+					<a class="sidebar-nav-item" href="#">
+						<i class="fa fa-You can add links in your config file"></i>
+					</a>
+					<a class="sidebar-nav-item" href="#">
+						<i class="fa fa-Another social link"></i>
+					</a>
+			<a class="sidebar-nav-item" href="">
+				<i class="fa fa-feed"></i>
+			</a>
+		</nav>
+	</div>
+</div>		<div class="content container">
+<div class="post">
+	<h1 class="post-title">Le polymorphisme en Python</h1>
+	<span class="post-date">Thu 14 June 2018</span>
+	<p>Le polymorphisme dit "paramétrique" est un des concepts clés de la programmation orientée objet. Il permet de définir plusieurs fonctions de même nom mais avec des signatures différentes (variant sur le nombre et le type d'argument). C'est aussi un bon moyen de segmenter le code par logique "métier".</p>
+<p>Python répond nativement à ces besoins, grâce au typage dynamique (duck typing) des variables et à la séparation (unpacking) des arguments. Toutefois, c'est un bon exercice que d'en chercher une implémentation.</p>
+<p>Pour l’exemple, je souhaite obtenir une fonction <code>add</code> qui :</p>
+<ul>
+<li>somme les arguments si ce sont des entiers ;</li>
+<li>les concatène, avec des espaces, si ce sont chaînes ;</li>
+<li>lever une exception sinon.ValueError.</li>
+</ul>
+<p>Par soucis de simplification, on admet que tous les arguments sont de même type.</p>
+<h1>Implémentation naive</h1>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="n">arg_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">arg_type</span> <span class="ow">is</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">add_int</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">arg_type</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">add_str</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span>
+
+<span class="k">def</span> <span class="nf">add_int</span><span class="p">(</span><span class="o">*</span><span class="n">numbers</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">add_str</span><span class="p">(</span><span class="o">*</span><span class="n">words</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>
+<span class="k">assert</span> <span class="n">add</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="s1">&#39;world&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;hello world&#39;</span>
+<span class="k">assert</span> <span class="n">add</span><span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="n">raises</span> <span class="ne">ValueError</span>
+</pre></div>
+
+
+<p><em>Note : par commodité, j'écris <code>assert ... raises ...</code>, bien que l'instruction n’existe pas. A l'occasion, j'en proposerai aussi une implémentation.</em></p>
+<p>On a une fonction "technique" qui analyse le type d'argument et redirige vers les fonctions "métier" attendues.</p>
+<p>L’implémentation fonctionne, mais elle est perfectible. En effet, à chaque ajout/retrait de fonction métier on doit aussi modifier la fonction générique. On souhaiterait d'avantage découpler la logique "technique" de la logique "métier".</p>
+<h1>Avec un décorateur</h1>
+<div class="highlight"><pre><span></span><span class="n">mapping</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">def</span> <span class="nf">register_add</span><span class="p">(</span><span class="n">arg_type</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="n">mapping</span><span class="p">[</span><span class="n">arg_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+            <span class="n">arg_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">arg_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mapping</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="k">return</span> <span class="n">mapping</span><span class="p">[</span><span class="n">arg_type</span><span class="p">](</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">run</span>
+    <span class="k">return</span> <span class="n">register</span>
+
+<span class="nd">@register_add</span><span class="p">(</span><span class="n">NoneType</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="nd">@register_add</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">add_int</span><span class="p">(</span><span class="o">*</span><span class="n">numbers</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+
+<span class="nd">@register_add</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">add_str</span><span class="p">(</span><span class="o">*</span><span class="n">words</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Cette fois-ci, c'est bon, on peut ajouter de nouvelles fonctions métiers sans toucher au noyau technique, grâce à l'usage du décorateur.</p>
+<p>Cette implémentation requiert qu’au moins une des fonctions décorées soit nommée <code>add</code>, pour servir de point d’entrée. Ce ne sera pas forcément cette foncion qui sera réellement executée. Ce qui peut porter à confusion.</p>
+<div class="highlight"><pre><span></span><span class="k">assert</span> <span class="n">add_int</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>  <span class="c1"># no surprise</span>
+<span class="k">assert</span> <span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>  <span class="c1"># cool</span>
+<span class="k">assert</span> <span class="n">add_str</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>  <span class="c1"># ouch</span>
+</pre></div>
+
+
+<p>D’autre part, on aimerait regrouper le dictionnaire de "mapping" et la fonction de "dispatch", dans une même structure de données, leurs fonctionnements étant liés. Cela va nous amener à implémenter le code sous forme de classe.</p>
+<h1>Avec une classe</h1>
+<div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Add</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">_mapping</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">arg_type</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">_mapping</span><span class="p">[</span><span class="n">arg_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">arg_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">arg_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_mapping</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_mapping</span><span class="p">[</span><span class="n">arg_type</span><span class="p">](</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+<span class="nd">@Add.register</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_</span><span class="p">(</span><span class="o">*</span><span class="n">numbers</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+
+<span class="nd">@Add.register</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_</span><span class="p">(</span><span class="o">*</span><span class="n">words</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
+
+<span class="n">add</span> <span class="o">=</span> <span class="n">Add</span><span class="o">.</span><span class="n">run</span>
+<span class="k">assert</span> <span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>
+<span class="k">assert</span> <span class="n">add</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="s1">&#39;world&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;hello world&#39;</span>
+</pre></div>
+
+
+<p><em>Note: Nul, besoin d’instancier la classe. Heureusement d'ailleurs car on a utiliser une valeur par défaut "muable" pour l'attribut de classe. C'est un piège en Python.</em></p>
+<p>Contrairement à d’autres langages, Python n’encourage pas à systématiquement utiliser des classes, si cela n’est pas nécessaire. Mais dans notre cas, j’y vois un gain notable dans la construction et la lisibilité du code.</p>
+<p>Ce motif "dispatcher" peut permettre d’implémenter de nombreux cas d’usage autres que le polymorphisme. J'en propose quelques exemples.</p>
+<h1>Avec les libs standards</h1>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">singledispatch</span>
+
+<span class="nd">@singledispatch</span>
+<span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span>
+
+<span class="nd">@add.register</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_</span><span class="p">(</span><span class="o">*</span><span class="n">numbers</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">numbers</span><span class="p">)</span>
+
+<span class="nd">@add.register</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">_</span><span class="p">(</span><span class="o">*</span><span class="n">words</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">words</span><span class="p">)</span>
+</pre></div>
+
+
+<p>En fait, il existe un décorateur pré-conçu à cet usage, disponible dans <code>functools</code> à partir de Python 3.4. Faut toujours penser à regarder dans les libs standards, on gagne du temps !</p>
+</div>
+		</div>
+	</body>
+</html>
