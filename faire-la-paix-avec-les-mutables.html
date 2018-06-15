@@ -6,8 +6,8 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8">
 
 		<!-- Metadata -->
-	<meta name="description" content="Ingénieur logiciel #python #linux">
-	<meta property="og:description" content="Ingénieur logiciel #python #linux">
+	<meta name="description" content="Ingénieur logiciel #python #linux, Lyon.">
+	<meta property="og:description" content="Ingénieur logiciel #python #linux, Lyon.">
 	<meta property="og:title" content="Faire la paix avec les mutables" />
 	<meta property="og:type" content="article" />
 	<meta property="og:url" content="https://sergebouchut.github.io/faire-la-paix-avec-les-mutables.html" />
@@ -16,7 +16,7 @@
 		<!-- Enable responsiveness on mobile devices-->
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 
-		<title>Mon labo</title>
+		<title>terrarium</title>
 
 		<!-- CSS -->
 		<link href="//fonts.googleapis.com/" rel="dns-prefetch">
@@ -39,11 +39,11 @@
 			<h1>
 				<a href="/">
 					<img class="profile-picture" src="https://sergebouchut.github.io/images/profile.png">
-					Mon labo
+					terrarium
 				</a>
 			</h1>
 			<p class="lead"></p>
-			<p class="lead">Ingénieur logiciel #python #linux </p>
+			<p class="lead">Ingénieur logiciel #python #linux, Lyon. </p>
 			<p></p>
 		</div>
 		<nav class="sidebar-nav">
@@ -59,7 +59,7 @@
 					<a class="sidebar-nav-item" href="https://www.meetup.com/fr-FR/members/190950919/">
 						<i class="fa fa-meetup"></i>
 					</a>
-			<a class="sidebar-nav-item" href="feeds/all.rss.xml">
+			<a class="sidebar-nav-item" href="feeds/rss.xml">
 				<i class="fa fa-feed"></i>
 			</a>
 		</nav>
@@ -69,32 +69,34 @@
 	<h1 class="post-title">Faire la paix avec les mutables</h1>
 	<span class="post-date">Sun 17 June 2018</span>
 	<p><img alt="Magneto" src="https://sergebouchut.github.io/images/xmen.jpg" title="Peace was never an option."></p>
-<p>En python, certaines structures de données sont dites "mutables: : on peut en modifier les valeurs, après les avoir instanciées : c’est naturellement le cas des objets, des dictionnaires, des listes (mais pas des tuples), et bien d’autres.</p>
-<h1>Les mutables sont nos amis</h1>
-<p>Tentons de modifier le contenu d’une liste, en conservant sont identité (sans en instancier une nouvelle).</p>
-<div class="highlight"><pre><span></span><span class="n">xmens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;tornade&#39;</span><span class="p">,</span> <span class="s1">&#39;cyclope&#39;</span><span class="p">]</span>
-
+<p>En python, certaines structures de données sont dites "mutables" : on peut en modifier les valeurs en conservant la même instance. Cela offre quelques propriétés intéressantes mais parfois dangereuses.</p>
+<p>Parmi les structures de données les plus courantes :</p>
+<ul>
+<li>ne sont pas mutables : les tuples, les chaines et autres types de base ;</li>
+<li>sont mutables : les listes, les dictionnaires, les objets.</li>
+</ul>
+<p>Pour s'en convaincre, on peut comparer les <code>id</code> avant et après modification.</p>
+<p>Par exemple, dans le cas d'une chaine, l'instance change.</p>
+<div class="highlight"><pre><span></span><span class="n">xmens</span> <span class="o">=</span> <span class="s1">&#39;tornade,cyclope,&#39;</span>
 <span class="nb">id</span><span class="p">(</span><span class="n">xmens</span><span class="p">)</span>
-<span class="mi">140229166148488</span>
+<span class="mi">139893527618544</span>
 
-<span class="n">xmens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;phoenix&#39;</span><span class="p">)</span>
-<span class="p">[</span><span class="s1">&#39;tornade&#39;</span><span class="p">,</span> <span class="s1">&#39;cyclope&#39;</span><span class="p">,</span> <span class="s1">&#39;phoenix&#39;</span><span class="p">]</span>
-
+<span class="n">xmens</span> <span class="o">+=</span> <span class="s1">&#39;phoenix,&#39;</span>
 <span class="nb">id</span><span class="p">(</span><span class="n">xmens</span><span class="p">)</span>
-<span class="mi">140229166148488</span>  <span class="c1"># same id</span>
+<span class="mi">139893504693696</span>  <span class="c1"># other id</span>
 </pre></div>
 
 
-<p>Rien de surprenant, il semble assez naturel, avec un langage haut niveau comme Python, de pouvoir librement ajouter des élément à une liste. Si les listes n'étaient pas "mutables", on devrait en instancier une nouvelle à chaque fois.</p>
+<p>En revanche, dans le cas d'une liste, l'instance demeure (sauf si on ré-instancie explicitement la liste).</p>
 <div class="highlight"><pre><span></span><span class="n">xmens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;tornade&#39;</span><span class="p">,</span> <span class="s1">&#39;cyclope&#39;</span><span class="p">]</span>
-
 <span class="nb">id</span><span class="p">(</span><span class="n">xmens</span><span class="p">)</span>
-<span class="mi">140229157348616</span>
+<span class="mi">140229166148488</span>
 
-<span class="n">xmens</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">xmens</span><span class="p">,</span> <span class="s1">&#39;malicia&#39;</span><span class="p">]</span>
-<span class="p">[</span><span class="s1">&#39;tornade&#39;</span><span class="p">,</span> <span class="s1">&#39;cyclope&#39;</span><span class="p">,</span> <span class="s1">&#39;malicia&#39;</span><span class="p">]</span>
-
+<span class="n">xmens</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;phoenix&#39;</span><span class="p">]</span>  <span class="c1"># or xmens.append(&#39;phoenix&#39;)</span>
 <span class="nb">id</span><span class="p">(</span><span class="n">xmens</span><span class="p">)</span>
+<span class="mi">140229166148488</span>  <span class="c1"># same id</span>
+
+<span class="n">xmens</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">xmens</span><span class="p">,</span> <span class="s1">&#39;malicia&#39;</span><span class="p">]</span>  <span class="c1"># this is a new list</span>
 <span class="mi">140229204490952</span>  <span class="c1"># other id</span>
 </pre></div>
 
@@ -108,61 +110,87 @@
 </pre></div>
 
 
-<div class="highlight"><pre><span></span><span class="n">Parfois</span><span class="p">,</span> <span class="n">cela</span> <span class="n">offre</span> <span class="n">des</span> <span class="n">fonctionnalit</span><span class="err">é</span><span class="n">s</span> <span class="n">assez</span> <span class="n">pratiques</span><span class="o">.</span> <span class="n">Par</span> <span class="n">exemple</span><span class="p">,</span> <span class="n">nul</span> <span class="n">besoin</span> <span class="n">de</span> <span class="n">retourner</span> <span class="n">une</span> <span class="n">liste</span> <span class="n">modifi</span><span class="err">é</span><span class="n">e</span> <span class="n">dans</span> <span class="n">une</span> <span class="n">fonction</span><span class="o">.</span>
-
-<span class="k">def</span> <span class="nf">hire</span><span class="p">(</span><span class="n">mutant</span><span class="p">,</span> <span class="n">team</span><span class="p">):</span>
+<h1>Bénéfices</h1>
+<p>En découle qu'il n'est pas nécessaire de retourner les arguments mutables modifiés dans une fonction.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">hire</span><span class="p">(</span><span class="n">mutant</span><span class="p">,</span> <span class="n">team</span><span class="p">):</span>
     <span class="n">team</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mutant</span><span class="p">)</span>
 
-    <span class="n">xmens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;tornade&#39;</span><span class="p">,</span> <span class="s1">&#39;cyclope&#39;</span><span class="p">]</span>
-    <span class="n">hire</span><span class="p">(</span><span class="s1">&#39;wolverine&#39;</span><span class="p">,</span> <span class="n">xmens</span><span class="p">)</span>
+<span class="n">xmens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;tornade&#39;</span><span class="p">,</span> <span class="s1">&#39;cyclope&#39;</span><span class="p">]</span>
+<span class="n">hire</span><span class="p">(</span><span class="s1">&#39;wolverine&#39;</span><span class="p">,</span> <span class="n">xmens</span><span class="p">)</span>
 
 <span class="k">print</span><span class="p">(</span><span class="n">xmens</span><span class="p">)</span>
 <span class="p">[</span><span class="s1">&#39;tornade&#39;</span><span class="p">,</span> <span class="s1">&#39;cyclope&#39;</span><span class="p">,</span> <span class="s1">&#39;wolverine&#39;</span><span class="p">]</span>
 </pre></div>
 
 
-<h1>Des amis qui n’en font qu’à leur tête !</h1>
-<p>Mais, cela peut aussi amener à des comportements surprenants, si on définis un mutable comme valeur par défaut d'un argument. Dans l’exemple, on créer et retourne une nouvelle liste si aucune n’est fournie.</p>
+<p>C'est pratique car cela :</p>
+<ul>
+<li>évite de ré-instancier la liste <code>xmens</code> avec le résultat de la fonction <code>hire</code> ;</li>
+<li>procure une syntaxe plus légère (surtout quand le nombre d'arguments augmente) ;</li>
+<li>facilite l'écriture des fonctions récursives.</li>
+</ul>
+<h1>Premier danger : la copie</h1>
+<p>En résulte un premier comportement qui peut surprendre : copier un mutable ne créer pas de nouvelle instance.</p>
+<div class="highlight"><pre><span></span><span class="n">xmens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;charles-xavier&#39;</span><span class="p">]</span>
+<span class="n">villains</span> <span class="o">=</span> <span class="n">xmens</span>
+<span class="n">villains</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;magneto&#39;</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">villains</span><span class="p">)</span>
+<span class="p">[</span><span class="s1">&#39;magneto&#39;</span><span class="p">]</span>  <span class="c1"># good</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">xmens</span><span class="p">)</span>
+<span class="p">[</span><span class="s1">&#39;magneto&#39;</span><span class="p">]</span>  <span class="c1"># not good</span>
+</pre></div>
+
+
+<p>Il faut explicitement ré-instancier une nouvelle liste, à partir des éléments de la liste que l'on veut copier.</p>
+<div class="highlight"><pre><span></span><span class="n">villains</span> <span class="o">=</span> <span class="p">[</span><span class="n">mutant</span> <span class="k">for</span> <span class="n">mutant</span> <span class="ow">in</span> <span class="n">xmens</span><span class="p">]</span>
+<span class="n">villains</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">xmens</span><span class="p">]</span>  <span class="c1"># from python 3</span>
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+<span class="n">villains</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="n">xmens</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Mais ce n'est toujours pas suffisant, si la liste contient elle-même des mutables, ceux-ci seront "partagés" entre les instances. Dans ce cas, il faut faire une copie récursive.</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="n">villains</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">xmens</span><span class="p">)</span>
+</pre></div>
+
+
+<h1>Second danger : les valeurs par défaut</h1>
+<p>Autre comportements surprenant, si on définis un mutable comme valeur par défaut d'un argument d'une fonction. Dans l’exemple, on créer et retourne une nouvelle liste si aucune n’est fournie.</p>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">hire</span><span class="p">(</span><span class="n">mutant</span><span class="p">,</span> <span class="n">team</span><span class="o">=</span><span class="p">[]):</span>
-<span class="sd">&quot;&quot;&quot;Create a new team, if no team provided.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Create a new team, if no team provided.&quot;&quot;&quot;</span>
     <span class="n">team</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mutant</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">team</span>
 
-    <span class="n">xmens</span> <span class="o">=</span> <span class="n">hire</span><span class="p">(</span><span class="s1">&#39;charles-xavier&#39;</span><span class="p">)</span>
-    <span class="p">[</span><span class="s1">&#39;charles-xavier&#39;</span><span class="p">]</span>
+<span class="n">xmens</span> <span class="o">=</span> <span class="n">hire</span><span class="p">(</span><span class="s1">&#39;charles-xavier&#39;</span><span class="p">)</span>
+<span class="p">[</span><span class="s1">&#39;charles-xavier&#39;</span><span class="p">]</span>  <span class="c1"># good</span>
 
-    <span class="n">villains</span> <span class="o">=</span> <span class="n">hire</span><span class="p">(</span><span class="s1">&#39;magneto&#39;</span><span class="p">)</span>
-    <span class="p">[</span><span class="s1">&#39;charles-xavier&#39;</span><span class="p">,</span> <span class="s1">&#39;magneto&#39;</span><span class="p">]</span>  <span class="c1"># ?!</span>
+<span class="n">villains</span> <span class="o">=</span> <span class="n">hire</span><span class="p">(</span><span class="s1">&#39;magneto&#39;</span><span class="p">)</span>
+<span class="p">[</span><span class="s1">&#39;charles-xavier&#39;</span><span class="p">,</span> <span class="s1">&#39;magneto&#39;</span><span class="p">]</span>  <span class="c1"># not good</span>
 </pre></div>
 
 
 <p>Non, non, il semblerait que ce ne soit pas un anomalie, mais bien un "choix d'implémentation".</p>
-<p>En Python, les fonctions (tout comme les classes) sont des objets de première classe, on peut les assigner, accéder aux propriétés, etc.</p>
+<p>La raison est que, en Python, les fonctions (tout comme les classes) sont des objets de première classe.</p>
 <p>Voir: <a href="https://fr.wikipedia.org/wiki/Objet_de_premi%C3%A8re_classe">https://fr.wikipedia.org/wiki/Objet_de_premi%C3%A8re_classe</a></p>
-<p>En pratique, ça donne :</p>
-<div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">hire</span>
+<p>On peut donc, accéder à leur propriétés, les assigner, etc.</p>
+<div class="highlight"><pre><span></span><span class="n">hire</span><span class="o">.</span><span class="vm">__name__</span>
+<span class="n">hire</span>
 
-<span class="n">x</span><span class="o">.</span><span class="vm">__class__</span>
-<span class="n">function</span>
-
+<span class="n">x</span> <span class="o">=</span> <span class="n">hire</span>
 <span class="n">x</span><span class="o">.</span><span class="vm">__name__</span>
 <span class="n">hire</span>
 
-<span class="n">team</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">x</span><span class="p">(</span><span class="s1">&#39;wolverine&#39;</span><span class="p">,</span> <span class="n">team</span><span class="p">)</span>
-
-<span class="k">print</span><span class="p">(</span><span class="n">team</span><span class="p">)</span>
-<span class="p">[</span><span class="s1">&#39;worlverine&#39;</span><span class="p">]</span>
+<span class="n">x</span><span class="p">(</span><span class="s1">&#39;wolverine&#39;</span><span class="p">)</span>
+<span class="p">[</span><span class="s1">&#39;wolverine&#39;</span><span class="p">]</span>
 </pre></div>
 
 
-<p>Les valeurs par défauts des arguments font aussi partis des propriétés de la fonction. Revenons sur l’exemple de tout à l’heure.</p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">hire</span><span class="p">(</span><span class="n">mutant</span><span class="p">,</span> <span class="n">team</span><span class="o">=</span><span class="p">[]):</span>
-<span class="sd">&quot;&quot;&quot;Create a new team, if no team provided.&quot;&quot;&quot;</span>
-    <span class="n">team</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mutant</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">team</span>
-
-<span class="n">hire</span><span class="o">.</span><span class="vm">__defaults__</span>
+<p>Les valeurs par défauts des arguments font aussi partis des propriétés de la fonction.</p>
+<div class="highlight"><pre><span></span><span class="n">hire</span><span class="o">.</span><span class="vm">__defaults__</span>
 <span class="p">([],)</span>
 
 <span class="n">hire</span><span class="p">(</span><span class="s1">&#39;charles-xavier&#39;</span><span class="p">)</span>
@@ -175,12 +203,11 @@
 </pre></div>
 
 
-<p>La valeur par défaut étant une propriété mutable, elle est susceptible d’évoluer à chaque appel de la fonction.</p>
-<p>Faut reconnaître que c’est un peu traître et à priori pas considéré comme une bonne pratique. Pylint, par exemple retournera un message d’avertissement.</p>
+<p>Dans notre exemple, la valeur par défaut étant une propriété mutable, elle n'est pas à l'abris d'être modifiée lors de l'exécution de la fonction.</p>
+<p>Faut reconnaître que c’est un peu traître d'utiliser une valeur par défaut mutable et donc pas considéré comme une bonne pratique. Pylint, par exemple, affiche un message d’avertissement.</p>
 <p><em>W0102: Dangerous default value [] as argument.</em></p>
 <p>Voir: <a href="http://pylint-messages.wikidot.com/messages:w0102">http://pylint-messages.wikidot.com/messages:w0102</a></p>
-<h1>Un remède contre les mutations</h1>
-<p>On peut, par exemple, définir <code>None</code> comme valeur par défaut, puis créer la liste à l’intérieur de la fonction. Ainsi, la liste ne sera pas liée aux propriétés de la fonction.</p>
+<p>La parade la plus connue est de définir <code>None</code> comme valeur par défaut, puis de créer, si besoin, la liste à l’intérieur de la fonction. Ainsi, la liste ne sera pas liée aux propriétés de la fonction.</p>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">hire</span><span class="p">(</span><span class="n">mutant</span><span class="p">,</span> <span class="n">team</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create a new team, if no team provided.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">team</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
@@ -201,7 +228,7 @@
 </pre></div>
 
 
-<p>Notons, qu’on rencontre le même problématique avec les valeurs par défaut des attributs de classe, qui pourront être modifiés entre les instances.</p>
+<p>Même problématique avec les valeurs par défaut des attributs de classe, qui eux non plus, ne sont pas à l'abris d'être modifiés entre les instances.</p>
 <div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Team</span><span class="p">:</span>
     <span class="n">mutants</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">def</span> <span class="nf">hire</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mutant</span><span class="p">):</span>
@@ -219,7 +246,7 @@
 </pre></div>
 
 
-<p>Et le remède est du même acabit que pour les arguments des fonctions.</p>
+<p>Même problème, même solution.</p>
 <div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Team</span><span class="p">:</span>
     <span class="n">mutants</span> <span class="o">=</span> <span class="bp">None</span>
     <span class="k">def</span> <span class="nf">hire</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mutant</span><span class="p">):</span>
@@ -240,8 +267,7 @@
 
 
 <p>Personnellement, même si je comprends les raisons techniques d'un tel comportement, je ne suis pas convaincu de son intérêt sur un plan pratique.</p>
-<p>Il y a bien d’autre manière, plus simples et plus explicites, de rendre des données persistantes entre des objets ou des appels de fonctions. Celle-ci est contre-intuitive pour un langage haut niveau comme Python, où le développeur n'a pas à se préoccuper des spécificités sous jacentes à l'implémentation.</p>
-<p>J'ai envie d'appuyer mon point de vue avec quelques dogmes officieux de Python.</p>
+<p>Il y a bien d’autres manières, plus simples et plus explicites, de rendre des données persistantes entre des objets ou des appels de fonctions. Celle-ci étant, à mon goût, trop implicite et trop peu intuitive, se heurte aux dogmes fondamentaux du langages.</p>
 <ul>
 <li><em>Explicit is better than implicit.</em></li>
 <li><em>Simple is better than complex.</em></li>
@@ -249,9 +275,11 @@
 <li><em>There should be one — and preferably only one — obvious way to do it.</em></li>
 </ul>
 <p>J'imagine, qu'il existe une bonne raison d'avoir conserver un tel comportement mais je n'en ai pas trouvé d'explication.</p>
-<p><em>Note : les mutables ne seront pas acceptés en valeur par défaut des attributs des <code>Data Classes</code>, qui arrivent avec Python 3.7.</em>
-- https://www.python.org/dev/peps/pep-0557/#mutable-default-values
-- https://github.com/ericvsmith/dataclasses/issues/3</p>
+<p><em>Note : les mutables ne seront pas acceptés en valeur par défaut des attributs des <code>Data Classes</code>, qui arrivent avec Python 3.7.</em></p>
+<ul>
+<li><a href="https://www.python.org/dev/peps/pep-0557/#mutable-default-values">https://www.python.org/dev/peps/pep-0557/#mutable-default-values</a></li>
+<li><a href="https://github.com/ericvsmith/dataclasses/issues/3">https://github.com/ericvsmith/dataclasses/issues/3</a></li>
+</ul>
 	<div id="disqus_thread"></div>
 		<script type="text/javascript">
 			var disqus_shortname = 'sergebouchut';
