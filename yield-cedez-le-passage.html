@@ -70,12 +70,12 @@
 	<span class="post-date">Sat 16 June 2018</span>
 	<p><img alt="Johnny Depp / Benicio del Toro" src="https://sergebouchut.github.io/images/las_vegas_parano.jpg" title="We can’t stop here. This is bat country."></p>
 <p><code>yield</code> est une instruction bien connue des développeurs Python expérimentés, mais peu utilisée par les plus débutants. Pourtant, le concept est assez simple à appréhender et peut s'avérer pratique dans de nombreux cas.</p>
-<p>Yield peut se traduire par retourner / rendre / céder. En Python, il permet à une fonction de rendre la main, avant la fin de son exécution. Ce qui est opportun pour générer graduellement des valeurs (d'où l'appellation "générateur" qui en dérive). C’est aussi ce mécanisme qui est à l’œuvre dans les coroutines.</p>
+<p>Yield peut se traduire par retourner / rendre / céder. En Python, il permet à une fonction de rendre la main, avant la fin de son exécution. Ce qui est opportun pour exécuter graduellement du code (via un "générateur"). C’est aussi ce mécanisme qui est à l’œuvre dans les coroutines.</p>
 <p>Dans les tutoriels, je vois souvent des exemples de générateurs pour calculer des suites de nombres (suite de Fibonacci, nombres premiers, etc). J'ai envie de partager des exemples plus "utiles" dans mon quotidien de développeur.</p>
 <p><em>Note : pour le premier exemple, je compare des implémentations sans et avec générateur, pour en faire apprécier la valeur ajoutée. Pour les autres exemples, je vais droit au but.</em></p>
 <h1>La pagination</h1>
 <p>Imaginons vouloir fournir un "endpoint" qui pagine les résultats par lot de 10 pour économiser de la bande passante. Pour l'exemple, la base de données, retourne simplement les lettres de l'alphabet, via <code>db.execute</code>.</p>
-<h2>Implémentation naive</h2>
+<h3>1- implémentation naive</h3>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">page</span><span class="p">):</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
     <span class="n">count</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span>
@@ -87,19 +87,19 @@
 
 
 <span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">Querying</span> <span class="n">DB</span><span class="err">…</span>
+<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
 <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">]</span>
 
 <span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">Querying</span> <span class="n">DB</span><span class="err">…</span>
+<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
 <span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]</span>
 
 <span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">Querying</span> <span class="n">DB</span><span class="err">…</span>
+<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
 <span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]</span>
 
 <span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-<span class="n">Querying</span> <span class="n">DB</span><span class="err">…</span>
+<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
 <span class="ne">ValueError</span>
 </pre></div>
 
@@ -109,7 +109,7 @@
 <li>à chaque page, on fait une nouvelle requête en base, alors qu'on avait déjà récupéré les données,</li>
 <li>le "consommateur" de notre endpoint doit connaître / gérer la page à charger.</li>
 </ul>
-<h2>Utilisation d'un cache</h2>
+<h3>2- utilisation d'un cache</h3>
 <div class="highlight"><pre><span></span><span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
 
 <span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
@@ -133,7 +133,7 @@
 
 
 <span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">)</span>
-<span class="n">Querying</span> <span class="n">DB</span><span class="err">…</span>
+<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
 <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">]</span>
 
 <span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">)</span>
@@ -152,7 +152,7 @@
 <li>il y a collision si deux "consommateurs" envois la même requête,</li>
 <li>le code commence à se complexifier alors que le problème est trivial.</li>
 </ul>
-<h2>Utilisation d'un générateur</h2>
+<h3>3- utilisation d'un générateur</h3>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
     <span class="n">count</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span>
@@ -164,7 +164,7 @@
 <span class="n">letters</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">)</span>
 
 <span class="nb">next</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>
-<span class="n">Querying</span> <span class="n">DB</span><span class="err">…</span>
+<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
 <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">]</span>
 
 <span class="nb">next</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>
@@ -181,7 +181,7 @@
 <p>Plus besoin de cache, le code redevient simple. Plus de risque de collision, chaque "consommateur" instanciant son propre générateur.</p>
 <p>On peut aussi générer toutes les valeurs d'un coup.</p>
 <div class="highlight"><pre><span></span><span class="nb">list</span><span class="p">(</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">))</span>
-<span class="n">Querying</span> <span class="n">DB</span><span class="err">…</span>
+<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
 <span class="p">[[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">],</span>
  <span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">],</span>
  <span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]]</span>
@@ -244,7 +244,51 @@
 </pre></div>
 
 
-<h1>Les entrées / sorties</h1>
+<p>Enfin, on peut aussi déclarer le générateur "en intension". On ne peut pas lui envoyer de données via <code>send</code> et on définit une limite d'itérattion (ici un nombre de tour maximum).</p>
+<div class="highlight"><pre><span></span><span class="n">game</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span> <span class="k">for</span> <span class="n">turn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john&#39;</span><span class="p">))</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+<span class="s1">&#39;anna&#39;</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+<span class="s1">&#39;john&#39;</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+<span class="s1">&#39;anna&#39;</span>
+
+<span class="nb">list</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+<span class="p">[</span><span class="s1">&#39;john, &#39;</span><span class="n">anna</span><span class="s1">&#39;, &#39;</span><span class="n">john</span><span class="p">,</span> <span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john]</span>
+</pre></div>
+
+
+<p><em>Note : la liste contient 5 éléments (au lieu des 8 qu'on pourrait attendre), les 3 premiers ayant déjà été "consommés".</em></p>
+<h1>Parcourir / rechercher des données</h1>
+<p>La grande force des générateurs, c'est aussi d'économiser de la RAM en ne chargeant qu'une partie des données en mémoire. C'est vite significatif sur des volumes de données importants. On peut convertir n'importe quel itérable en générateur via <code>iter</code>.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">search_error</span><span class="p">(</span><span class="n">logs</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">logs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">startwith</span><span class="p">(</span><span class="s1">&#39;ERROR&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">log</span>
+</pre></div>
+
+
+<p><code>yield</code> nous offre toute la flexibilité de décider de continuer la recherche, si on souhaite d'avantage de résultats.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">search_error</span><span class="p">(</span><span class="n">logs</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">logs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">startwith</span><span class="p">(</span><span class="s1">&#39;ERROR&#39;</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">log</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">search_error</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+<span class="n">error</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+<span class="k">if</span> <span class="s1">&#39;HTTP_401_UNAUTHORIZED&#39;</span> <span class="ow">in</span> <span class="n">error</span><span class="p">:</span>
+    <span class="c1"># generate new token and retry</span>
+<span class="k">elif</span> <span class="s1">&#39;HTTP_403_FORBIDDEN&#39;</span> <span class="ow">in</span> <span class="n">error</span><span class="p">:</span>
+    <span class="c1"># get more details in logs</span>
+    <span class="n">details</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Le point fort est que l'on n'a pas besoin de définir les critères pour continuer ou non la recherche dans la méthode du générateur qui peut rester générique.</p>
+<h1>Surveiller des entrées / sorties</h1>
 <p>Imaginons vouloir lire en continue un fichier de log, alimenté par une source extérieur.</p>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">reader</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;a+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
@@ -284,26 +328,7 @@
 </pre></div>
 
 
-<h1>Générateur en intension</h1>
-<p>Pour finir en beauté, on reprend l'exemple du générateur cyclique en une seule ligne (remplaçant la boucle infinie par un nombre de tour max).</p>
-<div class="highlight"><pre><span></span><span class="n">game</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span> <span class="k">for</span> <span class="n">turn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john&#39;</span><span class="p">))</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
-<span class="s1">&#39;anna&#39;</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
-<span class="s1">&#39;john&#39;</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
-<span class="s1">&#39;anna&#39;</span>
-
-<span class="nb">list</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
-<span class="p">[</span><span class="s1">&#39;john, &#39;</span><span class="n">anna</span><span class="s1">&#39;, &#39;</span><span class="n">john</span><span class="p">,</span> <span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john]</span>
-</pre></div>
-
-
-<p><em>Note : la liste contient 5 éléments (au lieu de 8), les 3 premiers ayant déjà été "consommés".</em></p>
-<p>J'espère qu'avec ces exemples, vous serez plus inspiré par <code>yield</code> à l'avenir. :)</p>
+<p>J'espère qu'avec ces exemples donneront un peu d'inspiration à ceux qui voudraient exploiter d'avantage le potentiel de <code>yield</code> et des générateurs. Je n'ai volontairement pas donner d'exemple de coroutines, parce que je souhaiterais écrire un billet spécifiquement sur ce sujet.</p>
 	<div id="disqus_thread"></div>
 		<script type="text/javascript">
 			var disqus_shortname = 'sergebouchut';

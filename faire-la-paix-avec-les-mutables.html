@@ -69,11 +69,11 @@
 	<h1 class="post-title">Faire la paix avec les mutables</h1>
 	<span class="post-date">Sun 17 June 2018</span>
 	<p><img alt="Magneto" src="https://sergebouchut.github.io/images/xmen.jpg" title="Peace was never an option."></p>
-<p>En python, certaines structures de données sont dites "mutables" : on peut en modifier les valeurs en conservant la même instance. Cela offre quelques propriétés intéressantes mais parfois dangereuses.</p>
+<p>En python, certaines structures de données sont dites "mutables" : on peut en modifier les valeurs en conservant la même instance. Cela offre quelques propriétés intéressantes mais parfois dangereuses pour un développeur non averti.</p>
 <p>Parmi les structures de données les plus courantes :</p>
 <ul>
 <li>ne sont pas mutables : les tuples, les chaines et autres types de base ;</li>
-<li>sont mutables : les listes, les dictionnaires, les objets.</li>
+<li>sont mutables : les listes, les dictionnaires, les objets, etc.</li>
 </ul>
 <p>Pour s'en convaincre, on peut comparer les <code>id</code> avant et après modification.</p>
 <p>Par exemple, dans le cas d'une chaine, l'instance change.</p>
@@ -87,7 +87,7 @@
 </pre></div>
 
 
-<p>En revanche, dans le cas d'une liste, l'instance demeure (sauf si on ré-instancie explicitement la liste).</p>
+<p>En revanche, dans le cas d'une liste, l'instance demeure (sauf, bien sûr, si on ré-instancie explicitement la liste).</p>
 <div class="highlight"><pre><span></span><span class="n">xmens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;tornade&#39;</span><span class="p">,</span> <span class="s1">&#39;cyclope&#39;</span><span class="p">]</span>
 <span class="nb">id</span><span class="p">(</span><span class="n">xmens</span><span class="p">)</span>
 <span class="mi">140229166148488</span>
@@ -126,7 +126,7 @@
 <p>C'est pratique car cela :</p>
 <ul>
 <li>évite de ré-instancier la liste <code>xmens</code> avec le résultat de la fonction <code>hire</code> ;</li>
-<li>procure une syntaxe plus légère (surtout quand le nombre d'arguments augmente) ;</li>
+<li>procure une syntaxe plus légère (surtout quand le nombre d'arguments augmente), donc plus lisible, donc plus maintenable ;</li>
 <li>facilite l'écriture des fonctions récursives.</li>
 </ul>
 <h1>Premier danger : la copie</h1>
@@ -159,7 +159,7 @@
 
 
 <h1>Second danger : les valeurs par défaut</h1>
-<p>Autre comportements surprenant, si on définis un mutable comme valeur par défaut d'un argument d'une fonction. Dans l’exemple, on créer et retourne une nouvelle liste si aucune n’est fournie.</p>
+<p>Autre comportements surprenant, si on définis un mutable comme valeur par défaut d'un argument dans une fonction. Dans l’exemple, on créer et retourne une nouvelle liste si aucune n’est fournie.</p>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">hire</span><span class="p">(</span><span class="n">mutant</span><span class="p">,</span> <span class="n">team</span><span class="o">=</span><span class="p">[]):</span>
     <span class="sd">&quot;&quot;&quot;Create a new team, if no team provided.&quot;&quot;&quot;</span>
     <span class="n">team</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mutant</span><span class="p">)</span>
@@ -204,7 +204,7 @@
 
 
 <p>Dans notre exemple, la valeur par défaut étant une propriété mutable, elle n'est pas à l'abris d'être modifiée lors de l'exécution de la fonction.</p>
-<p>Faut reconnaître que c’est un peu traître d'utiliser une valeur par défaut mutable et donc pas considéré comme une bonne pratique. Pylint, par exemple, affiche un message d’avertissement.</p>
+<p>Faut reconnaître que c’est un peu traître d'utiliser une valeur par défaut mutable et donc ce n'est pas considéré comme une bonne pratique. Pylint, par exemple, affiche un message d’avertissement.</p>
 <p><em>W0102: Dangerous default value [] as argument.</em></p>
 <p>Voir: <a href="http://pylint-messages.wikidot.com/messages:w0102">http://pylint-messages.wikidot.com/messages:w0102</a></p>
 <p>La parade la plus connue est de définir <code>None</code> comme valeur par défaut, puis de créer, si besoin, la liste à l’intérieur de la fonction. Ainsi, la liste ne sera pas liée aux propriétés de la fonction.</p>
@@ -267,14 +267,14 @@
 
 
 <p>Personnellement, même si je comprends les raisons techniques d'un tel comportement, je ne suis pas convaincu de son intérêt sur un plan pratique.</p>
-<p>Il y a bien d’autres manières, plus simples et plus explicites, de rendre des données persistantes entre des objets ou des appels de fonctions. Celle-ci étant, à mon goût, trop implicite et trop peu intuitive, se heurte aux dogmes fondamentaux du langages.</p>
+<p>Il y a bien d’autres manières, plus simples et plus explicites, de rendre des données persistantes entre des objets ou des appels de fonctions. Celle-ci est, à mon avis, trop implicite et trop peu intuitive, pour ne pas se heurter aux dogmes fondamentaux du langages.</p>
 <ul>
 <li><em>Explicit is better than implicit.</em></li>
 <li><em>Simple is better than complex.</em></li>
 <li><em>Practicality beats purity.</em></li>
 <li><em>There should be one — and preferably only one — obvious way to do it.</em></li>
 </ul>
-<p>J'imagine, qu'il existe une bonne raison d'avoir conserver un tel comportement mais je n'en ai pas trouvé d'explication.</p>
+<p>J'imagine, qu'il existe une bonne raison d'avoir conserver un tel comportement mais je n'en ai pas trouvé d'explication jusqu'à maintenant.</p>
 <p><em>Note : les mutables ne seront pas acceptés en valeur par défaut des attributs des <code>Data Classes</code>, qui arrivent avec Python 3.7.</em></p>
 <ul>
 <li><a href="https://www.python.org/dev/peps/pep-0557/#mutable-default-values">https://www.python.org/dev/peps/pep-0557/#mutable-default-values</a></li>

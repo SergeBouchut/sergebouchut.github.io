@@ -89,7 +89,7 @@ git rebase <span class="c1">#4</span>
 </pre></div>
 
 
-<p>On peut légitiment se questionner sur l'intérêt de manipuler directement des commits via leur hash, alors qu'on dispose d'outils plus "amicaux", à savoir les branches et les tags. Au quotidien, ça ne s'impose, occasionnelement ça permet, entre autres, de récuperer de l'historique que l'on croyait perdu.</p>
+<p>On peut légitiment se questionner sur l'intérêt de manipuler directement des commits via leur hash, alors qu'on dispose d'outils plus "amicaux", à savoir les branches et les tags. Au quotidien, cela ne s'impose pas. Mais occasionnelement, cela peut permettre de récuperer de l'historique que l'on croyait perdu.</p>
 <h1>Restaurer une branche / un tag supprimé</h1>
 <p>Prenons en exemple, un dépôt avec deux branches : <code>master</code> qui pointe sur le commit <code>#1</code> et <code>feature</code> qui pointe sur le commit <code>3</code>.</p>
 <div class="highlight"><pre><span></span>(master)$ git log --oneline --all
@@ -174,9 +174,11 @@ git rebase <span class="c1">#4</span>
 </pre></div>
 
 
-<p>La documentation officielle de Git pour ~démolir~ modifier puis récupérer son historique 
-- <a href="https://git-scm.com/book/fr/v1/Utilitaires-Git-R%C3%A9%C3%A9crire-l-historique">https://git-scm.com/book/fr/v1/Utilitaires-Git-R%C3%A9%C3%A9crire-l-historique</a>
-- <a href="https://git-scm.com/book/fr/v1/Les-tripes-de-Git-Maintenance-et-r%C3%A9cup%C3%A9ration-de-donn%C3%A9es">https://git-scm.com/book/fr/v1/Les-tripes-de-Git-Maintenance-et-r%C3%A9cup%C3%A9ration-de-donn%C3%A9es</a></p>
+<p>La documentation officielle de Git pour ~démolir~ modifier puis récupérer son historique.</p>
+<ul>
+<li><a href="https://git-scm.com/book/fr/v1/Utilitaires-Git-R%C3%A9%C3%A9crire-l-historique">https://git-scm.com/book/fr/v1/Utilitaires-Git-R%C3%A9%C3%A9crire-l-historique</a></li>
+<li><a href="https://git-scm.com/book/fr/v1/Les-tripes-de-Git-Maintenance-et-r%C3%A9cup%C3%A9ration-de-donn%C3%A9es">https://git-scm.com/book/fr/v1/Les-tripes-de-Git-Maintenance-et-r%C3%A9cup%C3%A9ration-de-donn%C3%A9es</a></li>
+</ul>
 <p>Finalement, ils ne sont pas si antipathiques ces commits. :)</p>
 	<div id="disqus_thread"></div>
 		<script type="text/javascript">
