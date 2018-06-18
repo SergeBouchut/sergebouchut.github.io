@@ -70,11 +70,11 @@
 	<span class="post-date">Thu 14 June 2018</span>
 	<p><img alt="Harvey Dent" src="https://sergebouchut.github.io/blog/images/batman.jpg" title="The only morality in a cruel world is chance: unbiased, unprejudiced, fair."></p>
 <p>Le polymorphisme dit "paramétrique" est un des concepts clés de la programmation orientée objet. Il permet de définir plusieurs fonctions de même nom, mais avec des signatures différentes (variant sur le nombre et le type d'argument). C'est aussi un bon moyen de segmenter le code par logique "métier".</p>
-<p>Python répond nativement à ces besoins, grâce au typage dynamique des variables (duck typing) et à la séparation arguments (unpacking). Néanmoins, implémenter une structure polymorphe un exercice intéressant.</p>
+<p>Python répond nativement à ces besoins, grâce au typage dynamique des variables (duck typing) et à la séparation des arguments (unpacking). Néanmoins, implémenter une structure polymorphe est un exercice intéressant.</p>
 <p>Pour l’exemple, je souhaite obtenir une fonction <code>add</code> qui :</p>
 <ul>
 <li>somme les arguments si ce sont des entiers ;</li>
-<li>les concatène, avec des espaces, si ce sont chaînes ;</li>
+<li>les concatène, avec des espaces, si ce sont des chaînes ;</li>
 <li>lève une exception sinon.</li>
 </ul>
 <p>Par soucis de simplification, on admet que tous les arguments sont de même type.</p>
@@ -96,11 +96,10 @@
 
 <span class="k">assert</span> <span class="n">add</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>
 <span class="k">assert</span> <span class="n">add</span><span class="p">(</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="s1">&#39;world&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;hello world&#39;</span>
-<span class="k">assert</span> <span class="n">add</span><span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="n">raises</span> <span class="ne">ValueError</span>
+<span class="k">assert</span> <span class="n">add</span><span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>  <span class="c1"># raises ValueError</span>
 </pre></div>
 
 
-<p>_Note : par commodité, j'écris <code>assert ... raises ...</code>, bien que l'instruction n’existe pas.</p>
 <p>On a une fonction "noyau" qui analyse le type d'argument et redirige vers les fonctions "métier" attendues.</p>
 <p>L’implémentation fonctionne, mais elle est perfectible. En effet, à chaque ajout d'une fonctionnalité métier on doit aussi modifier le code du noyau. On souhaiterait d'avantage découpler la logique "métier" de la logique "noyau".</p>
 <h1>Avec un décorateur</h1>

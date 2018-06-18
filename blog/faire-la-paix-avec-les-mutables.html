@@ -130,7 +130,7 @@
 <li>facilite l'écriture des fonctions récursives.</li>
 </ul>
 <h1>Premier danger : la copie</h1>
-<p>En résulte un premier comportement qui peut surprendre : copier un mutable ne créer pas de nouvelle instance.</p>
+<p>En résulte un premier comportement qui peut surprendre : copier un mutable ne crée pas de nouvelle instance.</p>
 <div class="highlight"><pre><span></span><span class="n">xmens</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;charles-xavier&#39;</span><span class="p">]</span>
 <span class="n">villains</span> <span class="o">=</span> <span class="n">xmens</span>
 <span class="n">villains</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;magneto&#39;</span>
@@ -159,7 +159,7 @@
 
 
 <h1>Second danger : les valeurs par défaut</h1>
-<p>Autre comportements surprenant, si on définis un mutable comme valeur par défaut d'un argument dans une fonction. Dans l’exemple, on créer et retourne une nouvelle liste si aucune n’est fournie.</p>
+<p>Autre comportement surprenant : lorsque l'on définit un mutable comme valeur par défaut d'un argument dans une fonction. Dans l’exemple, on crée et retourne une nouvelle liste si aucune n’est fournie.</p>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">hire</span><span class="p">(</span><span class="n">mutant</span><span class="p">,</span> <span class="n">team</span><span class="o">=</span><span class="p">[]):</span>
     <span class="sd">&quot;&quot;&quot;Create a new team, if no team provided.&quot;&quot;&quot;</span>
     <span class="n">team</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mutant</span><span class="p">)</span>
@@ -173,7 +173,7 @@
 </pre></div>
 
 
-<p>Non, non, il semblerait que ce ne soit pas un anomalie, mais bien un "choix d'implémentation".</p>
+<p>Non, non, il semblerait que ce ne soit pas une anomalie, mais bien un "choix d'implémentation".</p>
 <p>La raison est que, en Python, les fonctions (tout comme les classes) sont des objets de première classe.</p>
 <p>Voir: <a href="https://fr.wikipedia.org/wiki/Objet_de_premi%C3%A8re_classe">https://fr.wikipedia.org/wiki/Objet_de_premi%C3%A8re_classe</a></p>
 <p>On peut donc, accéder à leur propriétés, les assigner, etc.</p>
@@ -189,7 +189,7 @@
 </pre></div>
 
 
-<p>Les valeurs par défauts des arguments font aussi partis des propriétés de la fonction.</p>
+<p>Les valeurs par défaut des arguments font aussi partie des propriétés de la fonction.</p>
 <div class="highlight"><pre><span></span><span class="n">hire</span><span class="o">.</span><span class="vm">__defaults__</span>
 <span class="p">([],)</span>
 
@@ -203,8 +203,8 @@
 </pre></div>
 
 
-<p>Dans notre exemple, la valeur par défaut étant une propriété mutable, elle n'est pas à l'abris d'être modifiée lors de l'exécution de la fonction.</p>
-<p>Faut reconnaître que c’est un peu traître d'utiliser une valeur par défaut mutable et donc ce n'est pas considéré comme une bonne pratique. Pylint, par exemple, affiche un message d’avertissement.</p>
+<p>Dans notre exemple, la valeur par défaut étant une propriété mutable, elle n'est pas à l'abri d'être modifiée lors de l'exécution de la fonction.</p>
+<p>Faut reconnaître que c’est un comportement un peu traître. Ce n'est donc pas une bonne pratique d'utiliser un mutable en valeur par défaut. Pylint, par exemple, affiche un message d’avertissement.</p>
 <p><em>W0102: Dangerous default value [] as argument.</em></p>
 <p>Voir: <a href="http://pylint-messages.wikidot.com/messages:w0102">http://pylint-messages.wikidot.com/messages:w0102</a></p>
 <p>La parade la plus connue est de définir <code>None</code> comme valeur par défaut, puis de créer, si besoin, la liste à l’intérieur de la fonction. Ainsi, la liste ne sera pas liée aux propriétés de la fonction.</p>
@@ -228,7 +228,7 @@
 </pre></div>
 
 
-<p>Même problématique avec les valeurs par défaut des attributs de classe, qui eux non plus, ne sont pas à l'abris d'être modifiés entre les instances.</p>
+<p>Même problématique avec les valeurs par défaut des attributs de classe, qui eux non plus, ne sont pas à l'abri d'être modifiés entre les instances.</p>
 <div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Team</span><span class="p">:</span>
     <span class="n">mutants</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">def</span> <span class="nf">hire</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mutant</span><span class="p">):</span>
@@ -267,14 +267,14 @@
 
 
 <p>Personnellement, même si je comprends les raisons techniques d'un tel comportement, je ne suis pas convaincu de son intérêt sur un plan pratique.</p>
-<p>Il y a bien d’autres manières, plus simples et plus explicites, de rendre des données persistantes entre des objets ou des appels de fonctions. Celle-ci est, à mon avis, trop implicite et trop peu intuitive, pour ne pas se heurter aux dogmes fondamentaux du langages.</p>
+<p>Il y a bien d’autres manières, plus simples et plus explicites, de rendre des données persistantes entre des objets ou des appels de fonction. Celle-ci est, à mon avis, trop implicite et trop peu intuitive, pour ne pas se heurter aux dogmes fondamentaux du langages.</p>
 <ul>
 <li><em>Explicit is better than implicit.</em></li>
 <li><em>Simple is better than complex.</em></li>
 <li><em>Practicality beats purity.</em></li>
 <li><em>There should be one — and preferably only one — obvious way to do it.</em></li>
 </ul>
-<p>J'imagine, qu'il existe une bonne raison d'avoir conserver un tel comportement mais je n'en ai pas trouvé d'explication jusqu'à maintenant.</p>
+<p>J'imagine, qu'il existe une bonne raison d'avoir conservé un tel comportement mais je n'ai pas encore trouvé d'explication.</p>
 <p><em>Note : les mutables ne seront pas acceptés en valeur par défaut des attributs des <code>Data Classes</code>, qui arrivent avec Python 3.7.</em></p>
 <ul>
 <li><a href="https://www.python.org/dev/peps/pep-0557/#mutable-default-values">https://www.python.org/dev/peps/pep-0557/#mutable-default-values</a></li>
