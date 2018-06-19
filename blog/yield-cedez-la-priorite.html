@@ -6,12 +6,12 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8">
 
 		<!-- Metadata -->
-	<meta name="description" content="Ingénieur logiciel #python #linux, Lyon. N'hésitez pas à laisser des commentaires pour me compléter, me corriger, me poser des questions ou simplement m'encourager ! :)">
-	<meta property="og:description" content="Ingénieur logiciel #python #linux, Lyon. N'hésitez pas à laisser des commentaires pour me compléter, me corriger, me poser des questions ou simplement m'encourager ! :)">
-	<meta property="og:title" content="Yield : cédez la priorité" />
+	<meta name="description" content="Des exemples de générateurs utiles au quotidien du développeur.">
+	<meta property="og:description" content="Des exemples de générateurs utiles au quotidien du développeur.">
+	<meta property="og:title" content="Yield, cédez la priorité" />
 	<meta property="og:type" content="article" />
 	<meta property="og:url" content="https://srjj.io/blog/yield-cedez-la-priorite.html" />
-		<meta property="og:image" content="https://srjj.io/blog/images/profile.png" />
+	<meta property="og:image" content="https://srjj.io/blog/images/las_vegas_parano.jpg" />
 
 		<!-- Enable responsiveness on mobile devices-->
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
@@ -32,409 +32,6 @@
 	</head>
 
 	<body class="theme-base-0d">
-		<div class="content container">
-<div class="post">
-	<h1 class="post-title">Yield : cédez la priorité</h1>
-	<span class="post-date">Sat 16 June 2018</span>
-	<p><img alt="Johnny Depp / Benicio del Toro" src="https://srjj.io/blog/images/las_vegas_parano.jpg" title="We can’t stop here. This is bat country."></p>
-<p><code>yield</code> est une instruction bien connue des développeurs Python expérimentés, mais peu utilisée par les plus débutants. Pourtant, le concept est assez simple à appréhender et peut s'avérer pratique dans de nombreux cas.</p>
-<p>Yield peut se traduire par retourner / rendre / céder. En Python, il permet à une fonction de rendre la main, avant la fin de son exécution. Ce qui est opportun pour exécuter graduellement du code (via un "générateur"). C’est aussi ce mécanisme qui est à l’œuvre dans les coroutines.</p>
-<p>Dans les tutoriels, je vois souvent des exemples de générateurs pour calculer des suites mathématiques (nombres premiers, Fibonacci, etc) ou d'autres opérations que je n'ai jamais eu besoin d'implémenter. J'ai envie de partager des exemples plus "utiles" dans mon quotidien de développeur.</p>
-<h1>La pagination</h1>
-<p>Imaginons vouloir fournir un "endpoint" qui pagine les résultats par lot de 10 pour économiser de la bande passante. Pour l'exemple, la base de données, retourne simplement les lettres de l'alphabet, via <code>db.execute</code>.</p>
-<h3>1- implémentation naive</h3>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">page</span><span class="p">):</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
-    <span class="n">count</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">page</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">count</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span>
-
-    <span class="k">return</span> <span class="n">data</span><span class="p">[(</span><span class="n">page</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">10</span> <span class="p">:</span> <span class="n">page</span><span class="o">*</span><span class="mi">10</span><span class="p">]</span>
-
-
-<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
-<span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">]</span>
-
-<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
-<span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]</span>
-
-<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
-<span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]</span>
-
-<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
-<span class="ne">ValueError</span>
-</pre></div>
-
-
-<p>Le code fonctionne mais pose quelques problèmes :</p>
-<ul>
-<li>à chaque page, on fait une nouvelle requête en base, alors qu'on avait déjà récupéré les données ;</li>
-<li>le "consommateur" de notre endpoint doit connaître / gérer la page à charger.</li>
-</ul>
-<h3>2- utilisation d'un cache</h3>
-<div class="highlight"><pre><span></span><span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
-
-<span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">query</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
-        <span class="n">count</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span>
-        <span class="n">cache</span><span class="p">[</span><span class="n">query</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span>
-            <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="n">count</span><span class="p">,</span>
-            <span class="s1">&#39;page&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="p">}</span>
-
-    <span class="n">data</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">page</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[</span><span class="n">query</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
-
-    <span class="k">if</span> <span class="n">page</span> <span class="o">&gt;</span> <span class="n">count</span><span class="p">:</span>
-        <span class="k">del</span> <span class="n">cache</span><span class="p">[</span><span class="n">query</span><span class="p">]</span>  <span class="c1"># clean the cache</span>
-        <span class="k">raise</span> <span class="ne">StopIteration</span>
-
-    <span class="n">cache</span><span class="p">[</span><span class="n">query</span><span class="p">][</span><span class="s1">&#39;page&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># prepare next iteration</span>
-    <span class="k">return</span> <span class="n">data</span><span class="p">[(</span><span class="n">page</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">10</span> <span class="p">:</span> <span class="n">page</span><span class="o">*</span><span class="mi">10</span><span class="p">]</span>
-
-
-<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">)</span>
-<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
-<span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">]</span>
-
-<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">)</span>
-<span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]</span>
-
-<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">)</span>
-<span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]</span>
-
-<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">)</span>
-<span class="ne">StopIteration</span>
-</pre></div>
-
-
-<p>On a résolu nos précédents problèmes, mais :</p>
-<ul>
-<li>il y a collision si deux "consommateurs" envoient la même requête ;</li>
-<li>le code commence à se complexifier inutilement pour un problème trivial.</li>
-</ul>
-<h3>3- utilisation d'un générateur</h3>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
-    <span class="n">count</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">count</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-        <span class="k">yield</span> <span class="n">data</span><span class="p">[(</span><span class="n">page</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">10</span> <span class="p">:</span> <span class="n">page</span><span class="o">*</span><span class="mi">10</span><span class="p">]</span>
-
-
-<span class="n">letters</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">)</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>
-<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
-<span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">]</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>
-<span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>
-<span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>
-<span class="ne">StopIteration</span>
-</pre></div>
-
-
-<p>Plus besoin de cache, le code redevient simple. Plus de risque de collision, chaque "consommateur" instanciant son propre générateur.</p>
-<p>On peut aussi générer toutes les valeurs d'un coup.</p>
-<div class="highlight"><pre><span></span><span class="nb">list</span><span class="p">(</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">))</span>
-<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
-<span class="p">[[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">],</span>
- <span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">],</span>
- <span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]]</span>
-</pre></div>
-
-
-<h1>Génération cyclique</h1>
-<p>On peut sans risque, utiliser des boucles infinies dans le générateur, à condition de rendre la main à chaque tour. C’est idéal pour générer des valeurs cycliques.</p>
-<p>Imaginons vouloir connaître le joueur de la partie, dont c’est le tour de jouer.</p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">play</span><span class="p">(</span><span class="o">*</span><span class="n">players</span><span class="p">):</span>
-    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">player</span> <span class="ow">in</span> <span class="n">players</span><span class="p">:</span>
-            <span class="k">yield</span> <span class="n">player</span>
-
-
-<span class="n">game</span> <span class="o">=</span> <span class="n">play</span><span class="p">(</span><span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john&#39;</span><span class="p">)</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
-<span class="s1">&#39;anna&#39;</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
-<span class="s1">&#39;john&#39;</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
-<span class="s1">&#39;anna&#39;</span>
-
-<span class="o">...</span>
-</pre></div>
-
-
-<p>On peut même envoyer des données dans le générateur.</p>
-<p>Imaginons que l’on veuille ajouter un joueur, en cours de partie.</p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">play</span><span class="p">(</span><span class="o">*</span><span class="n">players</span><span class="p">):</span>
-    <span class="n">new</span> <span class="o">=</span> <span class="bp">None</span>
-    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">player</span> <span class="ow">in</span> <span class="n">players</span><span class="p">:</span>
-            <span class="n">new</span> <span class="o">=</span> <span class="k">yield</span> <span class="n">player</span>
-            <span class="k">if</span> <span class="n">new</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">players</span> <span class="o">=</span> <span class="n">new</span><span class="p">,</span> <span class="o">*</span><span class="n">players</span>
-
-
-<span class="n">game</span> <span class="o">=</span> <span class="n">play</span><span class="p">(</span><span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john&#39;</span><span class="p">)</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
-<span class="s1">&#39;anna&#39;</span>
-
-<span class="n">game</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;dave&#39;</span><span class="p">)</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
-<span class="s1">&#39;john&#39;</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
-<span class="s1">&#39;dave&#39;</span>
-</pre></div>
-
-
-<p>Attention, si on essaie de générer toutes les valeurs d’un coup, on tombe dans la boucle infinie !</p>
-<div class="highlight"><pre><span></span><span class="nb">list</span><span class="p">(</span><span class="n">play</span><span class="p">(</span><span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john&#39;</span><span class="p">))</span>
-<span class="c1"># infinite loop</span>
-</pre></div>
-
-
-<p>Enfin, on peut aussi déclarer le générateur en "intension". On ne peut pas lui envoyer de données via <code>send</code> et on définit une limite d'itération (ici un nombre maximum de tours).</p>
-<div class="highlight"><pre><span></span><span class="n">game</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span> <span class="k">for</span> <span class="n">turn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john&#39;</span><span class="p">))</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
-<span class="s1">&#39;anna&#39;</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
-<span class="s1">&#39;john&#39;</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
-<span class="s1">&#39;anna&#39;</span>
-
-<span class="nb">list</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
-<span class="p">[</span><span class="s1">&#39;john, &#39;</span><span class="n">anna</span><span class="s1">&#39;, &#39;</span><span class="n">john</span><span class="p">,</span> <span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john]</span>
-</pre></div>
-
-
-<p><em>Note : la liste contient 5 éléments (au lieu des 8 que l'on pourrait attendre), les 3 premiers ayant déjà été "consommés".</em></p>
-<h1>Surveiller des entrées / sorties</h1>
-<p>Imaginons vouloir lire en continu un fichier de log, alimenté par une source extérieure.</p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">reader</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;a+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-            <span class="k">yield</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-
-
-<span class="n">log</span> <span class="o">=</span> <span class="n">reader</span><span class="p">(</span><span class="s1">&#39;service.log&#39;</span><span class="p">)</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
-<span class="s1">&#39;&#39;</span>
-
-<span class="c1"># echo &#39;foo&#39; &gt;&gt; service.log</span>
-<span class="nb">next</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
-<span class="s1">&#39;foo</span><span class="se">\n</span><span class="s1">&#39;</span>
-</pre></div>
-
-
-<p>Sans <code>yield</code>, on devrait, à chaque fois, ouvrir puis refermer le fichier. Ce qui ne serait vraiment pas optimal.</p>
-<p>On voudrait aussi pouvoir écrire dans le même fichier.</p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">reader_writer</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;a+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-            <span class="n">text</span> <span class="o">=</span> <span class="k">yield</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{text}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-
-<span class="n">log</span> <span class="o">=</span> <span class="n">reader_writer</span><span class="p">(</span><span class="s1">&#39;service.log&#39;</span><span class="p">)</span>
-
-<span class="nb">next</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
-<span class="s1">&#39;&#39;</span>
-
-<span class="n">log</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;bar&#39;</span><span class="p">)</span>
-<span class="c1"># cat service.log | tail -n 1</span>
-<span class="c1"># bar</span>
-</pre></div>
-
-
-<h1>Parcourir / rechercher des données</h1>
-<p>La grande force des générateurs, c'est aussi d'économiser de la RAM en ne chargeant qu'une partie des données en mémoire. Cela devient vite significatif sur des volumes de données importants. On peut convertir n'importe quel itérable en générateur via <code>iter</code>.</p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">search_error</span><span class="p">(</span><span class="n">logs</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">logs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">startwith</span><span class="p">(</span><span class="s1">&#39;ERROR&#39;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">log</span>
-</pre></div>
-
-
-<p><code>yield</code> nous offre toute la flexibilité de décider de continuer la recherche, si l'on souhaite d'avantage de résultats.</p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">search_error</span><span class="p">(</span><span class="n">logs</span><span class="p">):</span>
-    <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">logs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">log</span><span class="o">.</span><span class="n">startwith</span><span class="p">(</span><span class="s1">&#39;ERROR&#39;</span><span class="p">):</span>
-            <span class="k">yield</span> <span class="n">log</span>
-
-<span class="n">log</span> <span class="o">=</span> <span class="n">search_error</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
-<span class="n">error</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
-<span class="k">if</span> <span class="s1">&#39;HTTP_401_UNAUTHORIZED&#39;</span> <span class="ow">in</span> <span class="n">error</span><span class="p">:</span>
-    <span class="c1"># generate new token and retry</span>
-<span class="k">elif</span> <span class="s1">&#39;HTTP_403_FORBIDDEN&#39;</span> <span class="ow">in</span> <span class="n">error</span><span class="p">:</span>
-    <span class="c1"># get more details in logs</span>
-    <span class="n">details</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
-</pre></div>
-
-
-<p>Le point fort est que l'on gère la poursuite de l'exécution de la recherche hors de la méthode <code>search_error</code>, qui peut rester agnostique au contexte.</p>
-<h1>Chaîner des traitements</h1>
-<p>Imaginons vouloir récupérer des données depuis un fichier CSV en y appliquant diverses opérations de filtrage et de formatage, tout en évitant de :</p>
-<ul>
-<li>charger en mémoire l'ensemble des données en même temps ;</li>
-<li>parcourir plusieurs fois la liste des données.</li>
-</ul>
-<p>Ces critères sont plutôt simples à respecter, même sans utiliser <code>yield</code>.</p>
-<h3>1- implémentation naive</h3>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">filter_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">max_price</span><span class="p">):</span>
-    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">car</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">max_price</span>
-
-<span class="k">def</span> <span class="nf">format_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">currency</span><span class="p">):</span>
-    <span class="n">car</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">currency</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">car</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">]))</span>
-
-<span class="k">def</span> <span class="nf">read_cars</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">):</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">columns</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)</span>
-        <span class="n">cars</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">car</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)))</span>
-            <span class="k">if</span> <span class="n">filter_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">max_price</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
-                <span class="n">format_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">currency</span><span class="o">=</span><span class="s1">&#39;$&#39;</span><span class="p">)</span>
-                <span class="n">cars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">car</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cars</span>
-
-<span class="k">def</span> <span class="nf">get_cars</span><span class="p">():</span>
-    <span class="k">return</span> <span class="n">read_cars</span><span class="p">(</span><span class="s1">&#39;cars.csv&#39;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
-</pre></div>
-
-
-<p>On complexifie le problème en faisant varier les paramètres des fonctions de filtrage et de formatage selon le contexte métier. Cela nous contraint à remonter ces paramètres dans la fonction parente <code>read_cars</code>.</p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_us_cars</span><span class="p">():</span>
-    <span class="k">return</span> <span class="n">read_cars</span><span class="p">(</span><span class="s1">&#39;us_cars.csv&#39;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">,</span>
-                     <span class="n">max_price</span><span class="o">=</span><span class="s1">&#39;1000&#39;</span><span class="p">,</span> <span class="n">currency</span><span class="o">=</span><span class="s1">&#39;$&#39;</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">get_en_cars</span><span class="p">():</span>
-    <span class="k">return</span> <span class="n">read_cars</span><span class="p">(</span><span class="s1">&#39;eu_cars.csv&#39;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">,</span>
-                     <span class="n">max_price</span><span class="o">=</span><span class="s1">&#39;1200&#39;</span><span class="p">,</span> <span class="n">currency</span><span class="o">=</span><span class="s1">&#39;€&#39;</span><span class="p">)</span>
-</pre></div>
-
-
-<p>Cette fois, on ne veut plus seulement faire varier les valeurs, mais aussi faire varier les opérations exécutées selon le contexte métier.</p>
-<p>On pourrait faire le choix, d'ajouter des paramètres indiquant :</p>
-<ul>
-<li>les opérations à exécuter, selon le contexte ;</li>
-<li>les valeurs associées à ces opérations.</li>
-</ul>
-<p>Mais cela polluerait progressivement la fonction, à mesure, que le nombre d'opérations augmenterait. Il devient donc préférable de rassembler les opérations, en fonction de leur nature, avec leurs paramètres dans des structures de données.</p>
-<h3>2- regroupement des opérations</h3>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">read_cars</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">formatters</span><span class="p">):</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">columns</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)</span>
-        <span class="n">cars</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">car</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)))</span>
-            <span class="k">if</span> <span class="nb">all</span><span class="p">((</span><span class="n">func</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">func</span><span class="p">,</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">filters</span><span class="p">))):</span>
-                <span class="k">for</span> <span class="n">func</span><span class="p">,</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">formatters</span><span class="p">):</span>
-                    <span class="n">func</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-                <span class="n">cars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">car</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cars</span>
-
-<span class="k">def</span> <span class="nf">get_us_cars</span><span class="p">():</span>
-    <span class="n">filters</span> <span class="o">=</span> <span class="p">[(</span><span class="n">filter_price</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;max_price&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">})]</span>
-    <span class="n">formatters</span> <span class="o">=</span> <span class="p">[(</span><span class="n">format_price</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;currency&#39;</span><span class="p">:</span> <span class="s1">&#39;$&#39;</span><span class="p">})]</span>
-    <span class="k">return</span> <span class="n">read_cars</span><span class="p">(</span><span class="s1">&#39;us_cars.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;;&#39;</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">formatters</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">get_eu_cars</span><span class="p">():</span>
-    <span class="n">filters</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="p">(</span><span class="n">filter_price</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;max_price&#39;</span><span class="p">:</span> <span class="mi">1200</span><span class="p">}),</span>
-        <span class="p">(</span><span class="n">filter_color</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;exclude&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;blue&#39;</span><span class="p">]}),</span>
-        <span class="p">(</span><span class="n">filter_price</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;max_price&#39;</span><span class="p">:</span> <span class="mi">900</span><span class="p">}),</span>  <span class="c1"># make the first filter useless</span>
-    <span class="p">]</span>
-    <span class="n">formatters</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="p">(</span><span class="n">format_price</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;currency&#39;</span><span class="p">:</span> <span class="s1">&#39;€&#39;</span><span class="p">}),</span>
-        <span class="p">(</span><span class="n">format_name</span><span class="p">,</span> <span class="p">{}),</span>
-    <span class="p">]</span>
-    <span class="k">return</span> <span class="n">read_cars</span><span class="p">(</span><span class="s1">&#39;en_cars.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;;&#39;</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">formatters</span><span class="p">)</span>
-</pre></div>
-
-
-<p>Note code est d'avantage extensible, on peut désormais :</p>
-<ul>
-<li>exécuter plusieurs fois la même opération avec des valeurs différentes ;</li>
-<li>définir des ordres d'éxecutions.</li>
-</ul>
-<p>En revanche, on ne peut toujours pas :</p>
-<ul>
-<li>gérer un autre type d'opération (autre que filtrage ou formatage) ;</li>
-<li>conditionner l'exécution d'une opération en fonction du résultat d'une précédente.</li>
-</ul>
-<p>On pourrait faire d'autres tentatives avec des structures de données et de contrôle plus sophistiquées. Mais cela introduirait trop de complexité pour un problème qui, au final, demeure trivial.</p>
-<h3>3- utilisation d'un générateur</h3>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">):</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">columns</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-            <span class="k">yield</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">delimiter</span><span class="p">)))</span>
-
-<span class="k">def</span> <span class="nf">get_us_cars</span><span class="p">():</span>
-    <span class="n">reader</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;us_cars.csv&#39;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">[</span>
-        <span class="c1"># as format always return None, trick to run format</span>
-        <span class="n">format_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="s1">&#39;$&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">car</span>
-        <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="n">readers</span>
-        <span class="k">if</span> <span class="n">filter_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">max_price</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
-    <span class="p">]</span>
-
-<span class="k">def</span> <span class="nf">get_eu_cars</span><span class="p">():</span>
-    <span class="n">reader</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="s1">&#39;eu_cars.csv&#39;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
-    <span class="n">cars</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
-        <span class="k">if</span> <span class="p">(</span>
-            <span class="n">filter_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">max_price</span><span class="o">=</span><span class="mi">1200</span><span class="p">)</span> <span class="ow">and</span>
-            <span class="n">filter_color</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;blue&#39;</span><span class="p">]</span>
-        <span class="p">):</span>
-            <span class="n">format_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="s1">&#39;€&#39;</span><span class="p">)</span>
-            <span class="n">cars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">car</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">filter_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">max_price</span><span class="o">=</span><span class="mi">900</span><span class="p">):</span>
-            <span class="n">format_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="s1">&#39;€&#39;</span><span class="p">)</span>
-            <span class="n">format_name</span><span class="p">(</span><span class="n">car</span><span class="p">)</span>
-            <span class="n">cars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">car</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">cars</span>
-</pre></div>
-
-
-<p>On obtient enfin toute la souplesse désirée dans la combinaison des opérations. Cela, sans polluer la fonction de lecture des données <code>read</code> qui devient minimaliste (et même indépendante du type d'objet lu).</p>
-<hr>
-<p>J'espère que ces exemples donneront un peu d'inspiration à ceux qui voudraient exploiter d'avantage le potentiel de <code>yield</code> et des générateurs. Je n'ai volontairement pas donné d'exemple de coroutines, parce que je souhaiterais écrire un billet spécifiquement sur ce sujet.</p>
-	<div id="disqus_thread"></div>
-		<script type="text/javascript">
-			var disqus_shortname = 'sergebouchut';
-			(function() {
-	 			var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-	 			dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-	 			(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-	 		})();
-		</script>
-	<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
-</div>
-		</div>
 <div class="sidebar">
 	<div class="container sidebar-sticky">
 		<div class="sidebar-about">
@@ -467,5 +64,432 @@
 			</a>
 		</nav>
 	</div>
-</div>	</body>
+</div>		<div class="content container">
+<div class="post">
+	<h1 class="post-title">Yield, cédez la priorité</h1>
+	<span class="post-date">sam. 16 juin 2018</span>
+	<p><img alt="Raoul Duke and Dr. Gonzo" src="https://srjj.io/blog/images/las_vegas_parano.jpg" title="We can’t stop here. This is bat country."></p>
+<p><code>yield</code> est une instruction bien connue des développeurs Python expérimentés, mais peu utilisée par les plus débutants. Pourtant, le concept est assez simple à appréhender et peut s'avérer pratique dans de nombreux cas.</p>
+<p>Yield peut se traduire par retourner / rendre / céder. En Python, il permet à une fonction de rendre la main, avant la fin de son exécution. Ce qui est opportun pour exécuter graduellement du code, via une structure de contrôle nommée "générateur". C’est aussi ce mécanisme qui est à l’œuvre dans les coroutines.</p>
+<p>Dans les tutoriels, je vois souvent des exemples de générateurs pour calculer des suites mathématiques (nombres premiers, Fibonacci, etc) ou d'autres cas d'usage que je n'ai jamais eu besoin d'implémenter. J'ai envie de partager des exemples plus "utiles" dans mon quotidien de développeur.</p>
+<h1>Paginer des résultats</h1>
+<p>On veut fournir une API qui pagine les résultats par lots pour économiser de la bande passante. Pour l'exemple, la base de données, retourne simplement les lettres de l'alphabet, via <code>db.execute</code>.</p>
+<h3>Sans générateur (implémentation naive)</h3>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">db_execute</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return letters of the alphabet.&quot;&quot;&quot;</span>
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Querying DB...&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">string</span><span class="o">.</span><span class="n">ascii_lowercase</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">page</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">db_execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">page</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">count</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span>
+
+    <span class="k">return</span> <span class="n">data</span><span class="p">[(</span><span class="n">page</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">10</span> <span class="p">:</span> <span class="n">page</span><span class="o">*</span><span class="mi">10</span><span class="p">]</span>
+
+
+<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
+<span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">]</span>
+
+<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
+<span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]</span>
+
+<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
+<span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]</span>
+
+<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
+<span class="ne">ValueError</span>
+</pre></div>
+
+
+<p>On répond au besoin, mais :</p>
+<ul>
+<li>à chaque page, on fait une nouvelle requête en base, alors qu'on avait déjà récupéré les données ;</li>
+<li>le "client" de notre API doit connaître / gérer la page à charger.</li>
+</ul>
+<h3>Sans générateur (implémentation améliorée)</h3>
+<div class="highlight"><pre><span></span><span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">query</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">db_execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">cache</span><span class="p">[</span><span class="n">query</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">,</span>
+            <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="n">count</span><span class="p">,</span>
+            <span class="s1">&#39;page&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="n">data</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">page</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[</span><span class="n">query</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">page</span> <span class="o">&gt;</span> <span class="n">count</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">cache</span><span class="p">[</span><span class="n">query</span><span class="p">]</span>  <span class="c1"># clean the cache</span>
+        <span class="k">raise</span> <span class="ne">StopIteration</span>
+
+    <span class="n">cache</span><span class="p">[</span><span class="n">query</span><span class="p">][</span><span class="s1">&#39;page&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># prepare next iteration</span>
+    <span class="k">return</span> <span class="n">data</span><span class="p">[(</span><span class="n">page</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">10</span> <span class="p">:</span> <span class="n">page</span><span class="o">*</span><span class="mi">10</span><span class="p">]</span>
+
+
+<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">)</span>  <span class="c1"># client 1</span>
+<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
+<span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">]</span>
+
+<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">)</span>  <span class="c1"># client 2</span>
+<span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]</span>
+
+<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">)</span>  <span class="c1"># client 1</span>
+<span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]</span>
+
+<span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">)</span>  <span class="c1"># client 2</span>
+<span class="ne">StopIteration</span>
+</pre></div>
+
+
+<p>On a résolu nos précédents problèmes, mais :</p>
+<ul>
+<li>il y a collision si deux "clients" envoient la même requête ;</li>
+<li>le code est trop complexe relativement au problème qui est trivial.</li>
+</ul>
+<h3>Avec générateur</h3>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">db_execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">count</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">data</span><span class="p">[(</span><span class="n">page</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">10</span> <span class="p">:</span> <span class="n">page</span><span class="o">*</span><span class="mi">10</span><span class="p">]</span>
+
+
+<span class="n">letters</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">)</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>
+<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
+<span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">]</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>
+<span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>
+<span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">letters</span><span class="p">)</span>
+<span class="ne">StopIteration</span>
+</pre></div>
+
+
+<p>Plus besoin de cache, le code redevient simple. Plus de risque de collision, chaque "client" instanciant son propre générateur.</p>
+<p>On peut aussi générer toutes les valeurs d'un coup.</p>
+<div class="highlight"><pre><span></span><span class="nb">list</span><span class="p">(</span><span class="n">search</span><span class="p">(</span><span class="s1">&#39;letters&#39;</span><span class="p">))</span>
+<span class="n">Querying</span> <span class="n">DB</span><span class="o">...</span>
+<span class="p">[[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;h&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">],</span>
+ <span class="p">[</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="s1">&#39;l&#39;</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="s1">&#39;s&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">],</span>
+ <span class="p">[</span><span class="s1">&#39;u&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;z&#39;</span><span class="p">]]</span>
+</pre></div>
+
+
+<h1>Génération cyclique</h1>
+<p>On peut sans risque, utiliser des boucles infinies dans le générateur, à condition de rendre la main à chaque tour. C’est idéal pour générer des valeurs cycliques.</p>
+<p>On veut connaître le joueur de la partie, dont c’est le tour de jouer.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">play</span><span class="p">(</span><span class="o">*</span><span class="n">players</span><span class="p">):</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">player</span> <span class="ow">in</span> <span class="n">players</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">player</span>
+
+
+<span class="n">game</span> <span class="o">=</span> <span class="n">play</span><span class="p">(</span><span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john&#39;</span><span class="p">)</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+<span class="s1">&#39;anna&#39;</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+<span class="s1">&#39;john&#39;</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+<span class="s1">&#39;anna&#39;</span>
+
+<span class="o">...</span>
+</pre></div>
+
+
+<p>On peut même envoyer des données dans le générateur.</p>
+<p>On veut aussi pouvoir ajouter un joueur, en cours de partie.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">play</span><span class="p">(</span><span class="o">*</span><span class="n">players</span><span class="p">):</span>
+    <span class="n">new</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">player</span> <span class="ow">in</span> <span class="n">players</span><span class="p">:</span>
+            <span class="n">new</span> <span class="o">=</span> <span class="k">yield</span> <span class="n">player</span>
+            <span class="k">if</span> <span class="n">new</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">players</span> <span class="o">=</span> <span class="n">new</span><span class="p">,</span> <span class="o">*</span><span class="n">players</span>
+
+
+<span class="n">game</span> <span class="o">=</span> <span class="n">play</span><span class="p">(</span><span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john&#39;</span><span class="p">)</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+<span class="s1">&#39;anna&#39;</span>
+
+<span class="n">game</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;dave&#39;</span><span class="p">)</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+<span class="s1">&#39;john&#39;</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+<span class="s1">&#39;dave&#39;</span>
+</pre></div>
+
+
+<p>Attention, si on essaie de générer toutes les valeurs d’un coup, on tombe dans la boucle infinie !</p>
+<div class="highlight"><pre><span></span><span class="nb">list</span><span class="p">(</span><span class="n">play</span><span class="p">(</span><span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john&#39;</span><span class="p">))</span>  <span class="c1"># infinite loop</span>
+</pre></div>
+
+
+<p>Enfin, on peut aussi déclarer le générateur en "intension". On ne peut pas lui envoyer de données via <code>send</code>. Par choix, on définit une limite d'itération (un nombre maximum de tours).</p>
+<div class="highlight"><pre><span></span><span class="n">game</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span> <span class="k">for</span> <span class="n">turn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john&#39;</span><span class="p">))</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+<span class="s1">&#39;anna&#39;</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+<span class="s1">&#39;john&#39;</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+<span class="s1">&#39;anna&#39;</span>
+
+<span class="nb">list</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+<span class="p">[</span><span class="s1">&#39;john, &#39;</span><span class="n">anna</span><span class="s1">&#39;, &#39;</span><span class="n">john</span><span class="p">,</span> <span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john]</span>
+</pre></div>
+
+
+<p><em>Note : la liste contient 5 éléments (sur les 8 initiaux), les 3 premiers ayant déjà été "consommés".</em></p>
+<h1>Vérifier une condition sur un ensemble</h1>
+<h3>Sans générateur</h3>
+<p>Sur un ensemble d'objet <code>cars</code>, on veut s'assurer qu'une condition <code>price_below</code> est respectée sur :</p>
+<ul>
+<li>au moins un des objets via <code>any</code> ;</li>
+<li>l'ensemble des objets via <code>all</code>.</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="n">cars</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Tesla_S&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">:</span> <span class="mi">70</span><span class="n">_000</span><span class="p">},</span>
+    <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Dacia_Sandero&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">:</span> <span class="mi">11</span><span class="n">_000</span><span class="p">},</span>
+    <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Porsche_Cayenne&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">:</span> <span class="mi">90</span><span class="n">_000</span><span class="p">},</span>
+    <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Audi_A4&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="n">_000</span><span class="p">},</span>
+<span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">price_below</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">max_price</span><span class="p">):</span>
+    <span class="n">is_valid</span> <span class="o">=</span> <span class="n">car</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">max_price</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Checking {car[&#39;</span><span class="n">name</span><span class="s1">&#39;]}: {is_valid}&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">is_valid</span>
+
+<span class="nb">any</span><span class="p">([</span><span class="n">price_below</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="mi">20</span><span class="n">_000</span><span class="p">)</span> <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="n">cars</span><span class="p">])</span>
+<span class="n">Checking</span> <span class="n">Tesla_S</span><span class="p">:</span> <span class="bp">False</span>
+<span class="n">Checking</span> <span class="n">Dacia_Sandero</span><span class="p">:</span> <span class="bp">True</span>
+<span class="n">Checking</span> <span class="n">Porsche_Cayenne</span><span class="p">:</span> <span class="bp">False</span>
+<span class="n">Checking</span> <span class="n">Audi_A4</span><span class="p">:</span> <span class="bp">False</span>
+
+
+<span class="nb">all</span><span class="p">([</span><span class="n">price_above</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="mi">80</span><span class="n">_000</span><span class="p">)</span> <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="n">cars</span><span class="p">])</span>
+<span class="n">Checking</span> <span class="n">Tesla_S</span><span class="p">:</span> <span class="bp">False</span>
+<span class="n">Checking</span> <span class="n">Dacia_Sandero</span><span class="p">:</span> <span class="bp">False</span>
+<span class="n">Checking</span> <span class="n">Porsche_Cayenne</span><span class="p">:</span> <span class="bp">True</span>
+<span class="n">Checking</span> <span class="n">Audi_A4</span><span class="p">:</span> <span class="bp">False</span>
+</pre></div>
+
+
+<p>On répond au besoin mais, on parcourt systématiquement l'ensemble des valeurs.</p>
+<h3>Avec générateur</h3>
+<p>On veut stopper l'itération dès lors que l'on a :</p>
+<ul>
+<li>un resultat positif qui valide notre <code>any</code> ;</li>
+<li>un resultat négatif qui invalide notre <code>all</code>.</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="nb">any</span><span class="p">((</span><span class="n">price_below</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="mi">20</span><span class="n">_000</span><span class="p">)</span> <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="n">cars</span><span class="p">))</span>
+<span class="n">Checking</span> <span class="n">Tesla_S</span><span class="p">:</span> <span class="bp">False</span>
+<span class="n">Checking</span> <span class="n">Dacia_Sandero</span><span class="p">:</span> <span class="bp">True</span>
+
+
+<span class="nb">all</span><span class="p">((</span><span class="n">price_below</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="mi">80</span><span class="n">_000</span><span class="p">)</span> <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="n">cars</span><span class="p">))</span>
+<span class="n">Checking</span> <span class="n">Tesla_S</span><span class="p">:</span> <span class="bp">True</span>
+<span class="n">Checking</span> <span class="n">Dacia_Sandero</span><span class="p">:</span> <span class="bp">True</span>
+<span class="n">Checking</span> <span class="n">Porsche_Cayenne</span><span class="p">:</span> <span class="bp">False</span>
+</pre></div>
+
+
+<h1>Surveiller des entrées / sorties</h1>
+<p>On veut contrôler en continu les entrées ajoutées à fichier de log.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">reader</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;a+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">reader</span><span class="p">(</span><span class="s1">&#39;service.log&#39;</span><span class="p">)</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+<span class="s1">&#39;&#39;</span>
+
+<span class="c1"># echo &#39;foo&#39; &gt;&gt; service.log</span>
+<span class="nb">next</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+<span class="s1">&#39;foo</span><span class="se">\n</span><span class="s1">&#39;</span>
+</pre></div>
+
+
+<p>On veut aussi pouvoir écrire dans ce même fichier.</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">reader_writer</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;a+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="k">yield</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">text</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;{text}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">reader_writer</span><span class="p">(</span><span class="s1">&#39;service.log&#39;</span><span class="p">)</span>
+
+<span class="nb">next</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+<span class="s1">&#39;&#39;</span>
+
+<span class="n">log</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s1">&#39;bar&#39;</span><span class="p">)</span>
+<span class="c1"># cat service.log | tail -n 1</span>
+<span class="c1"># bar</span>
+</pre></div>
+
+
+<h1>Orchestrer des opérations</h1>
+<p>On veut récupérer des données depuis un fichier CSV en y appliquant diverses opérations de filtrage et de formatage, tout en évitant de :</p>
+<ul>
+<li>charger en mémoire l'ensemble des données en même temps ;</li>
+<li>parcourir plusieurs fois la liste des données.</li>
+</ul>
+<h3>Sans générateur (implémentation naive)</h3>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">filter_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">max_price</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">car</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">max_price</span>
+
+<span class="k">def</span> <span class="nf">format_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">currency</span><span class="p">):</span>
+    <span class="n">car</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%.2f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">currency</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">car</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">]))</span>
+
+<span class="k">def</span> <span class="nf">read_cars</span><span class="p">(</span><span class="n">country</span><span class="p">,</span> <span class="n">max_price</span><span class="p">,</span> <span class="n">currency</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">country</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;fr&#39;</span><span class="p">,</span> <span class="s1">&#39;us&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid country.&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_cars.csv&#39;</span> <span class="o">%</span> <span class="n">country</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">reader</span><span class="o">.</span><span class="n">fieldnames</span> <span class="o">==</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">]</span>
+        <span class="n">cars</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">filter_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">max_price</span><span class="o">=</span><span class="n">max_price</span><span class="p">):</span>
+                <span class="n">format_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">currency</span><span class="o">=</span><span class="n">currency</span><span class="p">)</span>
+                <span class="n">cars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">car</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cars</span>
+
+<span class="n">us_cars</span> <span class="o">=</span> <span class="n">read_cars</span><span class="p">(</span><span class="s1">&#39;us&#39;</span><span class="p">,</span> <span class="n">max_price</span><span class="o">=</span><span class="mi">80</span><span class="n">_000</span><span class="p">,</span> <span class="n">currency</span><span class="o">=</span><span class="s1">&#39;$&#39;</span><span class="p">)</span>
+<span class="n">fr_cars</span> <span class="o">=</span> <span class="n">read_cars</span><span class="p">(</span><span class="s1">&#39;fr&#39;</span><span class="p">,</span> <span class="n">max_price</span><span class="o">=</span><span class="mi">90</span><span class="n">_000</span><span class="p">,</span> <span class="n">currency</span><span class="o">=</span><span class="s1">&#39;€&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>On repond au besoin mais :</p>
+<ul>
+<li>la complexité de la fonction <code>read_cars</code> croît en fonction du nombre d'opérations ;</li>
+<li>on ne pas faire varier les opérations selon le contexte.</li>
+</ul>
+<h3>Sans générateur (implémentation améliorée)</h3>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">filter_color</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">only_colors</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">car</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">only_colors</span>
+
+<span class="k">def</span> <span class="nf">format_name</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">tag</span><span class="p">):</span>
+    <span class="n">car</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">f</span><span class="s1">&#39; #{tag}&#39;</span>
+
+<span class="k">def</span> <span class="nf">read_cars</span><span class="p">(</span><span class="n">country</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">formatters</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">country</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;fr&#39;</span><span class="p">,</span> <span class="s1">&#39;us&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid country.&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_cars.csv&#39;</span> <span class="o">%</span> <span class="n">country</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">reader</span><span class="o">.</span><span class="n">fieldnames</span> <span class="o">==</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">]</span>
+        <span class="n">cars</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">((</span><span class="n">func</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">func</span><span class="p">,</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="n">filters</span><span class="p">)):</span>
+                <span class="k">for</span> <span class="n">func</span><span class="p">,</span> <span class="n">kwargs</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">formatters</span><span class="p">):</span>
+                    <span class="n">func</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="n">cars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">car</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cars</span>
+
+<span class="k">def</span> <span class="nf">get_us_cars</span><span class="p">():</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="p">[(</span><span class="n">filter_price</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;max_price&#39;</span><span class="p">:</span> <span class="mi">80</span><span class="n">_000</span><span class="p">})]</span>
+    <span class="n">formatters</span> <span class="o">=</span> <span class="p">[(</span><span class="n">format_price</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;currency&#39;</span><span class="p">:</span> <span class="s1">&#39;$&#39;</span><span class="p">})]</span>
+    <span class="k">return</span> <span class="n">read_cars</span><span class="p">(</span><span class="s1">&#39;us&#39;</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">formatters</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">get_fr_cars</span><span class="p">():</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">filter_price</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;max_price&#39;</span><span class="p">:</span> <span class="mi">90</span><span class="n">_000</span><span class="p">}),</span>
+        <span class="p">(</span><span class="n">filter_color</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;only_colors&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;yellow&#39;</span><span class="p">]}),</span>
+    <span class="p">]</span>
+    <span class="n">formatters</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">format_price</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;currency&#39;</span><span class="p">:</span> <span class="s1">&#39;€&#39;</span><span class="p">}),</span>
+        <span class="p">(</span><span class="n">format_name</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="s1">&#39;rare&#39;</span><span class="p">}),</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="n">read_cars</span><span class="p">(</span><span class="s1">&#39;fr&#39;</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">formatters</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Le code est d'avantage extensible, mais on ne peut toujours pas :</p>
+<ul>
+<li>gérer un autre type d'opération (autre que filtrage ou formatage) ;</li>
+<li>conditionner l'exécution d'une opération en fonction du résultat d'une précédente.</li>
+</ul>
+<p><em>Note : on pourrait faire d'autres tentatives avec des structures plus sophistiquées. Mais le code serait trop complexe en comparaison du problème qui est trivial.</em></p>
+<h3>Avec générateur</h3>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">read_cars</span><span class="p">(</span><span class="n">country</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">country</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;fr&#39;</span><span class="p">,</span> <span class="s1">&#39;us&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid country.&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_cars.csv&#39;</span> <span class="o">%</span> <span class="n">country</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictReader</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;;&#39;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">reader</span><span class="o">.</span><span class="n">fieldnames</span> <span class="o">==</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;price&#39;</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">car</span>
+
+<span class="k">def</span> <span class="nf">get_us_cars</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="n">read_cars</span><span class="p">(</span><span class="s1">&#39;us&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">filter_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">max_price</span><span class="o">=</span><span class="mi">80</span><span class="n">_000</span><span class="p">):</span>
+            <span class="n">format_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="s1">&#39;$&#39;</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">car</span>
+
+<span class="k">def</span> <span class="nf">get_fr_cars</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="n">read_cars</span><span class="p">(</span><span class="s1">&#39;fr&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">filter_color</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">only_colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;yellow&#39;</span><span class="p">]:</span>
+            <span class="n">format_name</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;rare&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">filter_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">max_price</span><span class="o">=</span><span class="mi">20</span><span class="n">_000</span><span class="p">):</span>
+            <span class="n">format_name</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="s1">&#39;cheap&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">filter_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">max_price</span><span class="o">=</span><span class="mi">90</span><span class="n">_000</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="n">format_price</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="s1">&#39;€&#39;</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">car</span>
+
+<span class="n">us_cars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">get_us_cars</span><span class="p">())</span>
+<span class="n">fr_cars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">get_fr_cars</span><span class="p">())</span>
+</pre></div>
+
+
+<p>On obtient enfin toute la souplesse désirée dans la combinaison des opérations. Cela, sans "polluer" la fonction de lecture des données <code>read_cars</code>.</p>
+<hr>
+<p>Grâce aux générateurs :</p>
+<ul>
+<li>on économise la mémoire en ne chargeant pas l'ensemble des données d'un coup ;</li>
+<li>on économise le processeur en n'exécutant pas plus d'instructions que nécessaire ;</li>
+<li>on segmente mieux le code, en donnant le contrôle de l'exécution des couches inférieures aux couches supérieures.</li>
+</ul>
+<p>J'espère que ces exemples donneront un peu d'inspiration à ceux qui voudraient exploiter d'avantage le potentiel de <code>yield</code> et des générateurs. Je n'ai volontairement pas donné d'exemple de coroutines, parce que je souhaiterais écrire un billet spécifiquement sur ce sujet.</p>
+	<div id="disqus_thread"></div>
+		<script type="text/javascript">
+			var disqus_shortname = 'sergebouchut';
+			(function() {
+	 			var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+	 			dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+	 			(document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	 		})();
+		</script>
+	<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a></noscript>
+</div>
+		</div>
+	</body>
 </html>
