@@ -6,8 +6,8 @@
 		<meta http-equiv="content-type" content="text/html; charset=utf-8">
 
 		<!-- Metadata -->
-	<meta name="description" content="Des exemples de générateurs utiles au quotidien du développeur.">
-	<meta property="og:description" content="Des exemples de générateurs utiles au quotidien du développeur.">
+	<meta name="description" content="Des exemples de générateurs en Python, pour donner envie de les utiliser plus souvent.">
+	<meta property="og:description" content="Des exemples de générateurs en Python, pour donner envie de les utiliser plus souvent.">
 	<meta property="og:title" content="Yield, cédez la priorité" />
 	<meta property="og:type" content="article" />
 	<meta property="og:url" content="https://srjj.io/blog/yield-cedez-la-priorite.html" />
@@ -67,13 +67,13 @@
 </div>		<div class="content container">
 <div class="post">
 	<h1 class="post-title">Yield, cédez la priorité</h1>
-	<span class="post-date">sam. 16 juin 2018</span>
+	<span class="post-date">Sat 16 June 2018</span>
 	<p><img alt="Raoul Duke and Dr. Gonzo" src="https://srjj.io/blog/images/las_vegas_parano.jpg" title="We can’t stop here. This is bat country."></p>
 <p><code>yield</code> est une instruction bien connue des développeurs Python expérimentés, mais peu utilisée par les plus débutants. Pourtant, le concept est assez simple à appréhender et peut s'avérer pratique dans de nombreux cas.</p>
 <p>Yield peut se traduire par retourner / rendre / céder. En Python, il permet à une fonction de rendre la main, avant la fin de son exécution. Ce qui est opportun pour exécuter graduellement du code, via une structure de contrôle nommée "générateur". C’est aussi ce mécanisme qui est à l’œuvre dans les coroutines.</p>
 <p>Dans les tutoriels, je vois souvent des exemples de générateurs pour calculer des suites mathématiques (nombres premiers, Fibonacci, etc) ou d'autres cas d'usage que je n'ai jamais eu besoin d'implémenter. J'ai envie de partager des exemples plus "utiles" dans mon quotidien de développeur.</p>
 <h1>Paginer des résultats</h1>
-<p>On veut fournir une API qui pagine les résultats par lots pour économiser de la bande passante. Pour l'exemple, la base de données, retourne simplement les lettres de l'alphabet, via <code>db.execute</code>.</p>
+<p>On veut fournir une API qui pagine les résultats par lots pour économiser de la bande passante.</p>
 <h3>Sans générateur (implémentation naive)</h3>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">db_execute</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return letters of the alphabet.&quot;&quot;&quot;</span>
@@ -108,12 +108,13 @@
 </pre></div>
 
 
-<p>On répond au besoin, mais :</p>
+<p>La pagination fonctionne comme attendu, mais :</p>
 <ul>
 <li>à chaque page, on fait une nouvelle requête en base, alors qu'on avait déjà récupéré les données ;</li>
 <li>le "client" de notre API doit connaître / gérer la page à charger.</li>
 </ul>
 <h3>Sans générateur (implémentation améliorée)</h3>
+<p>On ajoute un système de cache.</p>
 <div class="highlight"><pre><span></span><span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
 
 <span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
@@ -151,12 +152,9 @@
 </pre></div>
 
 
-<p>On a résolu nos précédents problèmes, mais :</p>
-<ul>
-<li>il y a collision si deux "clients" envoient la même requête ;</li>
-<li>le code est trop complexe relativement au problème qui est trivial.</li>
-</ul>
+<p>Plus de requête redondante, ni de page à gérer, mais il y a un risque de collision si deux clients envoient la même requête. On pourrait encore étoffer l'implémentation mais le code devient trop complexe relativement au problème qui est trivial.</p>
 <h3>Avec générateur</h3>
+<p>On utilise un générateur.</p>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="n">query</span><span class="p">):</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">db_execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
     <span class="n">count</span> <span class="o">=</span> <span class="n">ceil</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span><span class="p">)</span>
@@ -247,7 +245,7 @@
 </pre></div>
 
 
-<p>Enfin, on peut aussi déclarer le générateur en "intension". On ne peut pas lui envoyer de données via <code>send</code>. Par choix, on définit une limite d'itération (un nombre maximum de tours).</p>
+<p>Enfin, on peut aussi déclarer le générateur en "intension". On ne peut pas lui envoyer de données via <code>send</code>. Par choix, on définit un nombre maximum d'itérations.</p>
 <div class="highlight"><pre><span></span><span class="n">game</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span> <span class="k">for</span> <span class="n">turn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;anna&#39;</span><span class="p">,</span> <span class="s1">&#39;john&#39;</span><span class="p">))</span>
 
 <span class="nb">next</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
@@ -291,15 +289,15 @@
 <span class="n">Checking</span> <span class="n">Audi_A4</span><span class="p">:</span> <span class="bp">False</span>
 
 
-<span class="nb">all</span><span class="p">([</span><span class="n">price_above</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="mi">80</span><span class="n">_000</span><span class="p">)</span> <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="n">cars</span><span class="p">])</span>
-<span class="n">Checking</span> <span class="n">Tesla_S</span><span class="p">:</span> <span class="bp">False</span>
-<span class="n">Checking</span> <span class="n">Dacia_Sandero</span><span class="p">:</span> <span class="bp">False</span>
-<span class="n">Checking</span> <span class="n">Porsche_Cayenne</span><span class="p">:</span> <span class="bp">True</span>
-<span class="n">Checking</span> <span class="n">Audi_A4</span><span class="p">:</span> <span class="bp">False</span>
+<span class="nb">all</span><span class="p">([</span><span class="n">price_below</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="mi">80</span><span class="n">_000</span><span class="p">)</span> <span class="k">for</span> <span class="n">car</span> <span class="ow">in</span> <span class="n">cars</span><span class="p">])</span>
+<span class="n">Checking</span> <span class="n">Tesla_S</span><span class="p">:</span> <span class="bp">True</span>
+<span class="n">Checking</span> <span class="n">Dacia_Sandero</span><span class="p">:</span> <span class="bp">True</span>
+<span class="n">Checking</span> <span class="n">Porsche_Cayenne</span><span class="p">:</span> <span class="bp">False</span>
+<span class="n">Checking</span> <span class="n">Audi_A4</span><span class="p">:</span> <span class="bp">True</span>
 </pre></div>
 
 
-<p>On répond au besoin mais, on parcourt systématiquement l'ensemble des valeurs.</p>
+<p>On vérifie bien les conditions mais on parcourt systématiquement l'ensemble des valeurs alors que ce n'est pas nécessaire.</p>
 <h3>Avec générateur</h3>
 <p>On veut stopper l'itération dès lors que l'on a :</p>
 <ul>
@@ -319,7 +317,7 @@
 
 
 <h1>Surveiller des entrées / sorties</h1>
-<p>On veut contrôler en continu les entrées ajoutées à fichier de log.</p>
+<p>On veut contrôler en continu les entrées ajoutées à un fichier de log.</p>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">reader</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;a+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
@@ -391,7 +389,7 @@
 <p>On repond au besoin mais :</p>
 <ul>
 <li>la complexité de la fonction <code>read_cars</code> croît en fonction du nombre d'opérations ;</li>
-<li>on ne pas faire varier les opérations selon le contexte.</li>
+<li>on ne sait pas faire varier les opérations exécutées selon le contexte.</li>
 </ul>
 <h3>Sans générateur (implémentation améliorée)</h3>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">filter_color</span><span class="p">(</span><span class="n">car</span><span class="p">,</span> <span class="n">only_colors</span><span class="p">):</span>
