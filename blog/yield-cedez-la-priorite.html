@@ -127,7 +127,7 @@
             <span class="s1">&#39;page&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
         <span class="p">}</span>
 
-    <span class="n">data</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">page</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[</span><span class="n">query</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">page</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[</span><span class="n">query</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>  <span class="c1"># from Python 3.7</span>
 
     <span class="k">if</span> <span class="n">page</span> <span class="o">&gt;</span> <span class="n">count</span><span class="p">:</span>
         <span class="k">del</span> <span class="n">cache</span><span class="p">[</span><span class="n">query</span><span class="p">]</span>  <span class="c1"># clean the cache</span>
