@@ -95,6 +95,10 @@ html {
   max-width: 5rem;
 }
 
+.sidebar-about .license-picture {
+  margin: 0 auto;
+}
+
 /* Sidebar nav */
 .sidebar-nav {
   margin-bottom: 1rem;
